@@ -1,15 +1,16 @@
 {
-  "name": "snake",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "scripts": {
-    "tsc": "tsc -w"
-  },
-  "keywords": [],
-  "author": "Kumar Gaurav <kmrgrv119@gmail.com>",
-  "license": "ISC",
-  "devDependencies": {
-    "typescript": "^4.9.3"
-  }
+    "name": "snake",
+    "version": "1.0.0",
+    "description": "",
+    "main": "index.js",
+    "scripts": {
+        "tsc": "tsc -w",
+        "build": "git subtree push --prefix build github gh-pages"
+    },
+    "keywords": [],
+    "author": "Kumar Gaurav <kmrgrv119@gmail.com>",
+    "license": "ISC",
+    "devDependencies": {
+        "typescript": "^4.9.3"
+    }
 }

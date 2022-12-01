@@ -10,49 +10,51 @@ var Direction;
     Direction[Direction["Right"] = 2] = "Right";
     Direction[Direction["Down"] = 3] = "Down";
 })(Direction || (Direction = {}));
+var gameState = {
+    frameTime: 900,
+    last: 0,
+    snake: {
+        direction: Direction.Down,
+        unitSize: 40,
+        occupiedUnits: [
+            { x: 2, y: 7 },
+            { x: 2, y: 6 },
+            { x: 2, y: 5 },
+            { x: 2, y: 4 },
+            { x: 2, y: 3 },
+            { x: 2, y: 2 },
+            { x: 2, y: 1 },
+            { x: 2, y: 0 },
+            // { x: 2, y: -1 },
+        ],
+    },
+};
 var eventManager = {
     e: Direction.Down,
     handleEvents: function () {
         switch (eventManager.e) {
             case Direction.Up:
-                if (gameState.direction !== Direction.Down) {
-                    gameState.direction = Direction.Up;
+                if (gameState.snake.direction !== Direction.Down) {
+                    gameState.snake.direction = Direction.Up;
                 }
                 break;
             case Direction.Left:
-                if (gameState.direction !== Direction.Right) {
-                    gameState.direction = Direction.Left;
+                if (gameState.snake.direction !== Direction.Right) {
+                    gameState.snake.direction = Direction.Left;
                 }
                 break;
             case Direction.Right:
-                if (gameState.direction !== Direction.Left) {
-                    gameState.direction = Direction.Right;
+                if (gameState.snake.direction !== Direction.Left) {
+                    gameState.snake.direction = Direction.Right;
                 }
                 break;
             case Direction.Down:
-                if (gameState.direction !== Direction.Up) {
-                    gameState.direction = Direction.Down;
+                if (gameState.snake.direction !== Direction.Up) {
+                    gameState.snake.direction = Direction.Down;
                 }
                 break;
         }
     },
-};
-var gameState = {
-    unitSize: 40,
-    direction: Direction.Down,
-    frameTime: 900,
-    head: {
-        x: 2,
-        y: 7,
-    },
-    last: 0,
-    snakeOccupiedUnits: [
-        { x: 2, y: 7 },
-        { x: 2, y: 6 },
-        { x: 2, y: 5 },
-        { x: 2, y: 4 },
-        { x: 2, y: 3 },
-    ],
 };
 document.addEventListener('keydown', function (event) {
     switch (event.key) {
@@ -71,34 +73,38 @@ document.addEventListener('keydown', function (event) {
     }
 });
 function update() {
-    switch (gameState.direction) {
+    var head = {
+        x: gameState.snake.occupiedUnits[0].x,
+        y: gameState.snake.occupiedUnits[0].y,
+    };
+    switch (gameState.snake.direction) {
         case Direction.Up:
-            gameState.head.y--;
+            head.y--;
             break;
         case Direction.Left:
-            gameState.head.x--;
+            head.x--;
             break;
         case Direction.Right:
-            gameState.head.x++;
+            head.x++;
             break;
         case Direction.Down:
-            gameState.head.y++;
+            head.y++;
             break;
     }
+    gameState.snake.occupiedUnits.unshift({ x: head.x, y: head.y });
+    gameState.snake.occupiedUnits.pop();
 }
 function drawRectangle(x, y, w, h, color) {
     context.fillStyle = color;
     context.fillRect(x, y, w, h);
 }
 function drawSnake() {
-    for (var i = 0; i < gameState.snakeOccupiedUnits.length; i++) {
-        drawRectangle(gameState.snakeOccupiedUnits[i].x * gameState.unitSize, gameState.snakeOccupiedUnits[i].y * gameState.unitSize, gameState.unitSize, gameState.unitSize, "rgb(0, 150, 0)");
+    for (var i = 0; i < gameState.snake.occupiedUnits.length; i++) {
+        drawRectangle(gameState.snake.occupiedUnits[i].x * gameState.snake.unitSize, gameState.snake.occupiedUnits[i].y * gameState.snake.unitSize, gameState.snake.unitSize, gameState.snake.unitSize, "rgb(0, 150, 0)");
     }
 }
 function draw() {
     drawSnake();
-    gameState.snakeOccupiedUnits.unshift({ x: gameState.head.x, y: gameState.head.y });
-    gameState.snakeOccupiedUnits.pop();
 }
 (function gameLoop(milliSeconds) {
     if ((milliSeconds - gameState.last) % 1000 > gameState.frameTime) {

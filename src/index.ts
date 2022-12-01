@@ -11,6 +11,34 @@ enum Direction {
     Down,
 }
 
+const eventManager = {
+    e: Direction.Down,
+    handleEvents: () => {
+        switch (eventManager.e) {
+            case Direction.Up:
+                if (gameState.direction !== Direction.Down) {
+                    gameState.direction = Direction.Up;
+                }
+                break;
+            case Direction.Left:
+                if (gameState.direction !== Direction.Right) {
+                    gameState.direction = Direction.Left;
+                }
+                break;
+            case Direction.Right:
+                if (gameState.direction !== Direction.Left) {
+                    gameState.direction = Direction.Right;
+                }
+                break;
+            case Direction.Down:
+                if (gameState.direction !== Direction.Up) {
+                    gameState.direction = Direction.Down;
+                }
+                break;
+        }
+    },
+};
+
 const gameState = {
     unitSize: 40,
     direction: Direction.Down,
@@ -32,16 +60,16 @@ const gameState = {
 document.addEventListener('keydown', (event) => {
     switch (event.key) {
         case 'ArrowUp':
-            gameState.direction = Direction.Up;
+            eventManager.e = Direction.Up;
             break;
         case 'ArrowLeft':
-            gameState.direction = Direction.Left;
+            eventManager.e = Direction.Left;
             break;
         case 'ArrowRight':
-            gameState.direction = Direction.Right;
+            eventManager.e = Direction.Right;
             break;
         case 'ArrowDown':
-            gameState.direction = Direction.Down;
+            eventManager.e = Direction.Down;
             break;
     }
 });
@@ -63,10 +91,9 @@ function update() {
     }
 }
 
-function drawRectangle(x: number, y: number, w: number, height: number, color: string) {
-    context.fillRect(x, y, gameState.unitSize, gameState.unitSize);
+function drawRectangle(x: number, y: number, w: number, h: number, color: string) {
     context.fillStyle = color;
-    context.fill();
+    context.fillRect(x, y, w, h);
 }
 
 function drawSnake() {
@@ -86,11 +113,11 @@ function draw() {
 
     gameState.snakeOccupiedUnits.unshift({ x: gameState.head.x, y: gameState.head.y });
     gameState.snakeOccupiedUnits.pop();
-    // console.log(snakeOccupiedUnits);
 }
 
 (function gameLoop(milliSeconds: number) {
     if ((milliSeconds - gameState.last) % 1000 > gameState.frameTime) {
+        eventManager.handleEvents();
         update();
         context.clearRect(0, 0, canvas.width, canvas.height);
         draw();

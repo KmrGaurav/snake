@@ -10,6 +10,33 @@ var Direction;
     Direction[Direction["Right"] = 2] = "Right";
     Direction[Direction["Down"] = 3] = "Down";
 })(Direction || (Direction = {}));
+var eventManager = {
+    e: Direction.Down,
+    handleEvents: function () {
+        switch (eventManager.e) {
+            case Direction.Up:
+                if (gameState.direction !== Direction.Down) {
+                    gameState.direction = Direction.Up;
+                }
+                break;
+            case Direction.Left:
+                if (gameState.direction !== Direction.Right) {
+                    gameState.direction = Direction.Left;
+                }
+                break;
+            case Direction.Right:
+                if (gameState.direction !== Direction.Left) {
+                    gameState.direction = Direction.Right;
+                }
+                break;
+            case Direction.Down:
+                if (gameState.direction !== Direction.Up) {
+                    gameState.direction = Direction.Down;
+                }
+                break;
+        }
+    },
+};
 var gameState = {
     unitSize: 40,
     direction: Direction.Down,
@@ -30,16 +57,16 @@ var gameState = {
 document.addEventListener('keydown', function (event) {
     switch (event.key) {
         case 'ArrowUp':
-            gameState.direction = Direction.Up;
+            eventManager.e = Direction.Up;
             break;
         case 'ArrowLeft':
-            gameState.direction = Direction.Left;
+            eventManager.e = Direction.Left;
             break;
         case 'ArrowRight':
-            gameState.direction = Direction.Right;
+            eventManager.e = Direction.Right;
             break;
         case 'ArrowDown':
-            gameState.direction = Direction.Down;
+            eventManager.e = Direction.Down;
             break;
     }
 });
@@ -59,10 +86,9 @@ function update() {
             break;
     }
 }
-function drawRectangle(x, y, w, height, color) {
-    context.fillRect(x, y, gameState.unitSize, gameState.unitSize);
+function drawRectangle(x, y, w, h, color) {
     context.fillStyle = color;
-    context.fill();
+    context.fillRect(x, y, w, h);
 }
 function drawSnake() {
     for (var i = 0; i < gameState.snakeOccupiedUnits.length; i++) {
@@ -73,10 +99,10 @@ function draw() {
     drawSnake();
     gameState.snakeOccupiedUnits.unshift({ x: gameState.head.x, y: gameState.head.y });
     gameState.snakeOccupiedUnits.pop();
-    // console.log(snakeOccupiedUnits);
 }
 (function gameLoop(milliSeconds) {
     if ((milliSeconds - gameState.last) % 1000 > gameState.frameTime) {
+        eventManager.handleEvents();
         update();
         context.clearRect(0, 0, canvas.width, canvas.height);
         draw();

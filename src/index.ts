@@ -14,9 +14,9 @@ enum Direction {
 const gameState = {
     frameTime: 900,
     last: 0,
+    unitSize: 40,
     snake: {
         direction: Direction.Down,
-        unitSize: 40,
         occupiedUnits: [
             { x: 2, y: 7 },
             { x: 2, y: 6 },
@@ -29,12 +29,15 @@ const gameState = {
             // { x: 2, y: -1 },
         ],
     },
+    apple: {
+        position: { x: 0, y: 0 },
+    },
 };
 
 const eventManager = {
-    e: Direction.Down,
+    event: Direction.Down,
     handleEvents: function () {
-        switch (eventManager.e) {
+        switch (eventManager.event) {
             case Direction.Up:
                 if (gameState.snake.direction !== Direction.Down) {
                     gameState.snake.direction = Direction.Up;
@@ -62,16 +65,16 @@ const eventManager = {
 document.addEventListener('keydown', (event) => {
     switch (event.key) {
         case 'ArrowUp':
-            eventManager.e = Direction.Up;
+            eventManager.event = Direction.Up;
             break;
         case 'ArrowLeft':
-            eventManager.e = Direction.Left;
+            eventManager.event = Direction.Left;
             break;
         case 'ArrowRight':
-            eventManager.e = Direction.Right;
+            eventManager.event = Direction.Right;
             break;
         case 'ArrowDown':
-            eventManager.e = Direction.Down;
+            eventManager.event = Direction.Down;
             break;
     }
 });
@@ -98,7 +101,13 @@ function update() {
     }
 
     gameState.snake.occupiedUnits.unshift({ x: head.x, y: head.y });
-    gameState.snake.occupiedUnits.pop();
+
+    const apple = gameState.apple.position;
+    if (head.x === apple.x && head.y === apple.y) {
+        gameState.apple.position = getUnOccupiedCoordinate();
+    } else {
+        gameState.snake.occupiedUnits.pop();
+    }
 }
 
 function drawRectangle(x: number, y: number, w: number, h: number, color: string) {
@@ -109,17 +118,44 @@ function drawRectangle(x: number, y: number, w: number, h: number, color: string
 function drawSnake() {
     for (let i = 0; i < gameState.snake.occupiedUnits.length; i++) {
         drawRectangle(
-            gameState.snake.occupiedUnits[i].x * gameState.snake.unitSize,
-            gameState.snake.occupiedUnits[i].y * gameState.snake.unitSize,
-            gameState.snake.unitSize,
-            gameState.snake.unitSize,
-            `rgb(0, 150, 0)`
+            gameState.snake.occupiedUnits[i].x * gameState.unitSize,
+            gameState.snake.occupiedUnits[i].y * gameState.unitSize,
+            gameState.unitSize,
+            gameState.unitSize,
+            `rgb(240, 250, 240)`
         );
     }
 }
 
+function getUnOccupiedCoordinate() {
+    const occupiedUnitsArray = [];
+    const occupiedUnits = gameState.snake.occupiedUnits;
+    for (let i = 0; i < occupiedUnits.length; i++) {
+        occupiedUnitsArray.push(occupiedUnits[i].x + occupiedUnits[i].y * 20);
+    }
+
+    let random = null;
+    while (random === null || occupiedUnitsArray.includes(random)) {
+        random = Math.floor(Math.random() * 20 * 15);
+    }
+
+    return { x: random % 20, y: Math.floor(random / 20) };
+}
+
+function drawApple() {
+    const apple = gameState.apple.position;
+    drawRectangle(
+        apple.x * gameState.unitSize,
+        apple.y * gameState.unitSize,
+        gameState.unitSize,
+        gameState.unitSize,
+        `rgb(250, 240, 240)`
+    );
+}
+
 function draw() {
     drawSnake();
+    drawApple();
 }
 
 (function gameLoop(milliSeconds: number) {

@@ -1,6 +1,32 @@
 "use strict";
 var canvas = document.getElementById('canvas');
 var context = canvas.getContext('2d');
+var restart = document.getElementById('restart');
+function getUnOccupiedCoordinate(occupiedUnits) {
+    var occupiedUnitsIndexes = [];
+    for (var i = 0; i < occupiedUnits.length; i++) {
+        occupiedUnitsIndexes.push(occupiedUnits[i].x + occupiedUnits[i].y * 20);
+    }
+    var random = null;
+    while (random === null || occupiedUnitsIndexes.includes(random)) {
+        random = Math.floor(Math.random() * 20 * 15);
+    }
+    return { x: random % 20, y: Math.floor(random / 20) };
+}
+restart.onclick = function () {
+    gameState.isGameRunning = true;
+    restart.style.visibility = 'hidden';
+    eventManager.event = Direction.Down;
+    gameState.snake.direction = Direction.Down;
+    gameState.snake.occupiedUnits = [
+        { x: 2, y: 7 },
+        { x: 2, y: 6 },
+        { x: 2, y: 5 },
+        { x: 2, y: 4 },
+        { x: 2, y: 3 },
+    ];
+    gameState.apple.position = getUnOccupiedCoordinate([]);
+};
 canvas.width = 800;
 canvas.height = 600;
 var Direction;
@@ -11,28 +37,32 @@ var Direction;
     Direction[Direction["Down"] = 3] = "Down";
 })(Direction || (Direction = {}));
 var gameState = {
+    isGameRunning: true,
     frameTime: 900,
     last: 0,
+    unitSize: 40,
+    dimenstions: {
+        width: 20,
+        height: 15,
+    },
     snake: {
         direction: Direction.Down,
-        unitSize: 40,
         occupiedUnits: [
             { x: 2, y: 7 },
             { x: 2, y: 6 },
             { x: 2, y: 5 },
             { x: 2, y: 4 },
             { x: 2, y: 3 },
-            { x: 2, y: 2 },
-            { x: 2, y: 1 },
-            { x: 2, y: 0 },
-            // { x: 2, y: -1 },
         ],
+    },
+    apple: {
+        position: getUnOccupiedCoordinate([]),
     },
 };
 var eventManager = {
-    e: Direction.Down,
+    event: Direction.Down,
     handleEvents: function () {
-        switch (eventManager.e) {
+        switch (eventManager.event) {
             case Direction.Up:
                 if (gameState.snake.direction !== Direction.Down) {
                     gameState.snake.direction = Direction.Up;
@@ -59,40 +89,75 @@ var eventManager = {
 document.addEventListener('keydown', function (event) {
     switch (event.key) {
         case 'ArrowUp':
-            eventManager.e = Direction.Up;
+            eventManager.event = Direction.Up;
             break;
         case 'ArrowLeft':
-            eventManager.e = Direction.Left;
+            eventManager.event = Direction.Left;
             break;
         case 'ArrowRight':
-            eventManager.e = Direction.Right;
+            eventManager.event = Direction.Right;
             break;
         case 'ArrowDown':
-            eventManager.e = Direction.Down;
+            eventManager.event = Direction.Down;
             break;
     }
 });
 function update() {
-    var head = {
-        x: gameState.snake.occupiedUnits[0].x,
-        y: gameState.snake.occupiedUnits[0].y,
-    };
-    switch (gameState.snake.direction) {
-        case Direction.Up:
-            head.y--;
-            break;
-        case Direction.Left:
-            head.x--;
-            break;
-        case Direction.Right:
-            head.x++;
-            break;
-        case Direction.Down:
-            head.y++;
-            break;
+    if (gameState.isGameRunning) {
+        var head = {
+            x: gameState.snake.occupiedUnits[0].x,
+            y: gameState.snake.occupiedUnits[0].y,
+        };
+        switch (gameState.snake.direction) {
+            case Direction.Up:
+                if (head.y === 0) {
+                    head.y = gameState.dimenstions.height - 1;
+                }
+                else {
+                    head.y--;
+                }
+                break;
+            case Direction.Left:
+                if (head.x === 0) {
+                    head.x = gameState.dimenstions.width - 1;
+                }
+                else {
+                    head.x--;
+                }
+                break;
+            case Direction.Right:
+                if ((head.x + 1) % gameState.dimenstions.width === 0) {
+                    head.x = 0;
+                }
+                else {
+                    head.x++;
+                }
+                break;
+            case Direction.Down:
+                if ((head.y + 1) % gameState.dimenstions.height === 0) {
+                    head.y = 0;
+                }
+                else {
+                    head.y++;
+                }
+                break;
+        }
+        gameState.snake.occupiedUnits.unshift({ x: head.x, y: head.y });
+        var apple = gameState.apple.position;
+        if (head.x === apple.x && head.y === apple.y) {
+            gameState.apple.position = getUnOccupiedCoordinate(gameState.snake.occupiedUnits);
+        }
+        else {
+            gameState.snake.occupiedUnits.pop();
+        }
+        for (var i = 4; i < gameState.snake.occupiedUnits.length; i++) {
+            if (head.x === gameState.snake.occupiedUnits[i].x &&
+                head.y === gameState.snake.occupiedUnits[i].y) {
+                gameState.isGameRunning = false;
+                restart.style.visibility = 'visible';
+            }
+        }
     }
-    gameState.snake.occupiedUnits.unshift({ x: head.x, y: head.y });
-    gameState.snake.occupiedUnits.pop();
 }
 function drawRectangle(x, y, w, h, color) {
     context.fillStyle = color;
@@ -100,11 +165,16 @@ function drawRectangle(x, y, w, h, color) {
 }
 function drawSnake() {
     for (var i = 0; i < gameState.snake.occupiedUnits.length; i++) {
-        drawRectangle(gameState.snake.occupiedUnits[i].x * gameState.snake.unitSize, gameState.snake.occupiedUnits[i].y * gameState.snake.unitSize, gameState.snake.unitSize, gameState.snake.unitSize, "rgb(0, 150, 0)");
+        drawRectangle(gameState.snake.occupiedUnits[i].x * gameState.unitSize, gameState.snake.occupiedUnits[i].y * gameState.unitSize, gameState.unitSize, gameState.unitSize, "rgb(150, 250, 150)");
     }
+}
+function drawApple() {
+    var apple = gameState.apple.position;
+    drawRectangle(apple.x * gameState.unitSize, apple.y * gameState.unitSize, gameState.unitSize, gameState.unitSize, "rgb(250, 150, 150)");
 }
 function draw() {
     drawSnake();
+    drawApple();
 }
 (function gameLoop(milliSeconds) {
     if ((milliSeconds - gameState.last) % 1000 > gameState.frameTime) {

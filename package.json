@@ -4,6 +4,7 @@
     "description": "",
     "main": "index.js",
     "scripts": {
+        "start": "live-server build",
         "tsc": "tsc -w",
         "build": "git subtree push --prefix build github gh-pages"
     },
@@ -11,6 +12,7 @@
     "author": "Kumar Gaurav <kmrgrv119@gmail.com>",
     "license": "ISC",
     "devDependencies": {
+        "live-server": "^1.2.2",
         "typescript": "^4.9.3"
     }
 }

@@ -4,6 +4,7 @@ const context = canvas.getContext('2d')!;
 const appleCount = document.getElementById('apple-count')! as HTMLParagraphElement;
 const level = document.getElementById('level')! as HTMLParagraphElement;
 const score = document.getElementById('score')! as HTMLParagraphElement;
+const best = document.getElementById('best')! as HTMLParagraphElement;
 
 const restart = document.getElementById('restart')! as HTMLButtonElement;
 
@@ -93,6 +94,10 @@ function setLevel() {
 
 function setScore() {
     score.textContent = 'Score: ' + gameState.score.toString();
+}
+
+function setBest() {
+    best.textContent = 'Best: ' + window.localStorage.getItem('best');
 }
 
 const eventManager = {
@@ -240,6 +245,12 @@ function update() {
                 restart.style.visibility = 'visible';
             }
         }
+
+        const localBest = window.localStorage.getItem('best')!;
+        if (parseInt(localBest) < gameState.score) {
+            window.localStorage.setItem('best', gameState.score.toString());
+            setBest();
+        }
     }
 }
 
@@ -280,6 +291,11 @@ function draw() {
     setAppleCount();
     setLevel();
     setScore();
+    const localBest = window.localStorage.getItem('best');
+    if (localBest === null) {
+        window.localStorage.setItem('best', '0');
+    }
+    setBest();
 })();
 
 (function gameLoop(milliSeconds: number) {

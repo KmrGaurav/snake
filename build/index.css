@@ -8,7 +8,7 @@ body {
 }
 
 #canvas {
-    margin-top: 50px;
+    margin-top: 40px;
     border: 3px solid black;
 }
 
@@ -31,4 +31,10 @@ body {
 }
 #restart:active {
     background-color: palevioletred;
+}
+
+#score {
+    font-family: sans-serif;
+    font-size: 1.5rem;
+    color: green;
 }

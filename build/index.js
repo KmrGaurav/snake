@@ -1,6 +1,7 @@
 "use strict";
 var canvas = document.getElementById('canvas');
 var context = canvas.getContext('2d');
+var score = document.getElementById('score');
 var restart = document.getElementById('restart');
 function getUnOccupiedCoordinate(occupiedUnits) {
     var occupiedUnitsIndexes = [];
@@ -26,6 +27,8 @@ restart.onclick = function () {
         { x: 2, y: 3 },
     ];
     gameState.apple.position = getUnOccupiedCoordinate([]);
+    gameState.score = 0;
+    score.textContent = 'Score: ' + gameState.score.toString();
 };
 canvas.width = 800;
 canvas.height = 600;
@@ -54,10 +57,13 @@ var gameState = {
             { x: 2, y: 4 },
             { x: 2, y: 3 },
         ],
+        color: "rgb(100, 150, 100)",
     },
     apple: {
         position: getUnOccupiedCoordinate([]),
+        color: "rgb(150, 100, 100)",
     },
+    score: 0,
 };
 var eventManager = {
     event: Direction.Down,
@@ -146,6 +152,8 @@ function update() {
         var apple = gameState.apple.position;
         if (head.x === apple.x && head.y === apple.y) {
             gameState.apple.position = getUnOccupiedCoordinate(gameState.snake.occupiedUnits);
+            gameState.score++;
+            score.textContent = 'Score: ' + gameState.score.toString();
         }
         else {
             gameState.snake.occupiedUnits.pop();
@@ -165,17 +173,20 @@ function drawRectangle(x, y, w, h, color) {
 }
 function drawSnake() {
     for (var i = 0; i < gameState.snake.occupiedUnits.length; i++) {
-        drawRectangle(gameState.snake.occupiedUnits[i].x * gameState.unitSize, gameState.snake.occupiedUnits[i].y * gameState.unitSize, gameState.unitSize, gameState.unitSize, "rgb(150, 250, 150)");
+        drawRectangle(gameState.snake.occupiedUnits[i].x * gameState.unitSize, gameState.snake.occupiedUnits[i].y * gameState.unitSize, gameState.unitSize, gameState.unitSize, gameState.snake.color);
     }
 }
 function drawApple() {
     var apple = gameState.apple.position;
-    drawRectangle(apple.x * gameState.unitSize, apple.y * gameState.unitSize, gameState.unitSize, gameState.unitSize, "rgb(250, 150, 150)");
+    drawRectangle(apple.x * gameState.unitSize, apple.y * gameState.unitSize, gameState.unitSize, gameState.unitSize, gameState.apple.color);
 }
 function draw() {
     drawSnake();
     drawApple();
 }
+(function initializeGame() {
+    score.textContent = 'Score: ' + gameState.score.toString();
+})();
 (function gameLoop(milliSeconds) {
     if ((milliSeconds - gameState.last) % 1000 > gameState.frameTime) {
         eventManager.handleEvents();

@@ -1,6 +1,24 @@
 "use strict";
 var canvas = document.getElementById('canvas');
 var context = canvas.getContext('2d');
+var restart = document.getElementById('restart');
+restart.onclick = function () {
+    gameState.isGameRunning = true;
+    restart.style.visibility = 'hidden';
+    eventManager.event = Direction.Down;
+    gameState.snake.direction = Direction.Down;
+    gameState.snake.occupiedUnits = [
+        { x: 2, y: 7 },
+        { x: 2, y: 6 },
+        { x: 2, y: 5 },
+        { x: 2, y: 4 },
+        { x: 2, y: 3 },
+    ];
+    gameState.apple.position = (function () {
+        var random = Math.floor(Math.random() * 20 * 15);
+        return { x: random % 20, y: Math.floor(random / 20) };
+    })();
+};
 canvas.width = 800;
 canvas.height = 600;
 var Direction;
@@ -11,6 +29,7 @@ var Direction;
     Direction[Direction["Down"] = 3] = "Down";
 })(Direction || (Direction = {}));
 var gameState = {
+    isGameRunning: true,
     frameTime: 900,
     last: 0,
     unitSize: 40,
@@ -22,14 +41,17 @@ var gameState = {
             { x: 2, y: 5 },
             { x: 2, y: 4 },
             { x: 2, y: 3 },
-            { x: 2, y: 2 },
-            { x: 2, y: 1 },
-            { x: 2, y: 0 },
+            // { x: 2, y: 2 },
+            // { x: 2, y: 1 },
+            // { x: 2, y: 0 },
             // { x: 2, y: -1 },
         ],
     },
     apple: {
-        position: { x: 0, y: 0 },
+        position: (function () {
+            var random = Math.floor(Math.random() * 20 * 15);
+            return { x: random % 20, y: Math.floor(random / 20) };
+        })(),
     },
 };
 var eventManager = {
@@ -76,31 +98,40 @@ document.addEventListener('keydown', function (event) {
     }
 });
 function update() {
-    var head = {
-        x: gameState.snake.occupiedUnits[0].x,
-        y: gameState.snake.occupiedUnits[0].y,
-    };
-    switch (gameState.snake.direction) {
-        case Direction.Up:
-            head.y--;
-            break;
-        case Direction.Left:
-            head.x--;
-            break;
-        case Direction.Right:
-            head.x++;
-            break;
-        case Direction.Down:
-            head.y++;
-            break;
-    }
-    gameState.snake.occupiedUnits.unshift({ x: head.x, y: head.y });
-    var apple = gameState.apple.position;
-    if (head.x === apple.x && head.y === apple.y) {
-        gameState.apple.position = getUnOccupiedCoordinate();
-    }
-    else {
-        gameState.snake.occupiedUnits.pop();
+    if (gameState.isGameRunning) {
+        var head = {
+            x: gameState.snake.occupiedUnits[0].x,
+            y: gameState.snake.occupiedUnits[0].y,
+        };
+        switch (gameState.snake.direction) {
+            case Direction.Up:
+                head.y--;
+                break;
+            case Direction.Left:
+                head.x--;
+                break;
+            case Direction.Right:
+                head.x++;
+                break;
+            case Direction.Down:
+                head.y++;
+                break;
+        }
+        gameState.snake.occupiedUnits.unshift({ x: head.x, y: head.y });
+        var apple = gameState.apple.position;
+        if (head.x === apple.x && head.y === apple.y) {
+            gameState.apple.position = getUnOccupiedCoordinate();
+        }
+        else {
+            gameState.snake.occupiedUnits.pop();
+        }
+        for (var i = 4; i < gameState.snake.occupiedUnits.length; i++) {
+            if (head.x === gameState.snake.occupiedUnits[i].x &&
+                head.y === gameState.snake.occupiedUnits[i].y) {
+                gameState.isGameRunning = false;
+                restart.style.visibility = 'visible';
+            }
+        }
     }
 }
 function drawRectangle(x, y, w, h, color) {

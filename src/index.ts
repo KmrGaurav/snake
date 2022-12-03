@@ -38,9 +38,9 @@ restart.onclick = function () {
     gameState.score = 0;
     gameState.level = 1;
     gameState.snake.appleCount = 0;
-    appleCount.textContent = 'Apple Count: ' + gameState.snake.appleCount.toString();
-    level.textContent = 'Level: ' + gameState.level.toString();
-    score.textContent = 'Score: ' + gameState.score.toString();
+    setAppleCount();
+    setLevel();
+    setScore();
     gameState.frameTime = 900;
 };
 
@@ -82,6 +82,18 @@ const gameState = {
     level: 1,
     score: 0,
 };
+
+function setAppleCount() {
+    appleCount.textContent = 'Apple Count: ' + gameState.snake.appleCount.toString();
+}
+
+function setLevel() {
+    level.textContent = 'Level: ' + gameState.level.toString();
+}
+
+function setScore() {
+    score.textContent = 'Score: ' + gameState.score.toString();
+}
 
 const eventManager = {
     event: Direction.Down,
@@ -212,9 +224,9 @@ function update() {
                 gameState.score += 70;
             }
 
-            appleCount.textContent = 'Apple Count: ' + gameState.snake.appleCount.toString();
-            level.textContent = 'Level: ' + gameState.level.toString();
-            score.textContent = 'Score: ' + gameState.score.toString();
+            setAppleCount();
+            setLevel();
+            setScore();
         } else {
             gameState.snake.occupiedUnits.pop();
         }
@@ -265,9 +277,9 @@ function draw() {
 }
 
 (function initializeGame() {
-    appleCount.textContent = 'Apple Count: ' + gameState.snake.appleCount.toString();
-    level.textContent = 'Level: ' + gameState.level.toString();
-    score.textContent = 'Score: ' + gameState.score.toString();
+    setAppleCount();
+    setLevel();
+    setScore();
 })();
 
 (function gameLoop(milliSeconds: number) {

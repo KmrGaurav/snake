@@ -1,5 +1,10 @@
 const canvas = document.getElementById('canvas') as HTMLCanvasElement;
 const context = canvas.getContext('2d')!;
+
+const appleCount = document.getElementById('apple-count')! as HTMLParagraphElement;
+const level = document.getElementById('level')! as HTMLParagraphElement;
+const score = document.getElementById('score')! as HTMLParagraphElement;
+
 const restart = document.getElementById('restart')! as HTMLButtonElement;
 
 function getUnOccupiedCoordinate(occupiedUnits: { x: number; y: number }[]) {
@@ -30,6 +35,13 @@ restart.onclick = function () {
         { x: 2, y: 3 },
     ];
     gameState.apple.position = getUnOccupiedCoordinate([]);
+    gameState.score = 0;
+    gameState.level = 1;
+    gameState.snake.appleCount = 0;
+    setAppleCount();
+    setLevel();
+    setScore();
+    gameState.frameTime = 900;
 };
 
 canvas.width = 800;
@@ -60,11 +72,28 @@ const gameState = {
             { x: 2, y: 4 },
             { x: 2, y: 3 },
         ],
+        color: `rgb(100, 150, 100)`,
+        appleCount: 0,
     },
     apple: {
         position: getUnOccupiedCoordinate([]),
+        color: `rgb(150, 100, 100)`,
     },
+    level: 1,
+    score: 0,
 };
+
+function setAppleCount() {
+    appleCount.textContent = 'Apple Count: ' + gameState.snake.appleCount.toString();
+}
+
+function setLevel() {
+    level.textContent = 'Level: ' + gameState.level.toString();
+}
+
+function setScore() {
+    score.textContent = 'Score: ' + gameState.score.toString();
+}
 
 const eventManager = {
     event: Direction.Down,
@@ -154,6 +183,50 @@ function update() {
         const apple = gameState.apple.position;
         if (head.x === apple.x && head.y === apple.y) {
             gameState.apple.position = getUnOccupiedCoordinate(gameState.snake.occupiedUnits);
+            gameState.snake.appleCount++;
+
+            if (gameState.snake.appleCount < 5) {
+                gameState.frameTime = 900;
+                gameState.level = 1;
+            } else if (gameState.snake.appleCount < 10) {
+                gameState.frameTime = 700;
+                gameState.level = 2;
+            } else if (gameState.snake.appleCount < 15) {
+                gameState.frameTime = 500;
+                gameState.level = 3;
+            } else if (gameState.snake.appleCount < 20) {
+                gameState.frameTime = 300;
+                gameState.level = 4;
+            } else if (gameState.snake.appleCount < 30) {
+                gameState.frameTime = 200;
+                gameState.level = 5;
+            } else if (gameState.snake.appleCount < 40) {
+                gameState.frameTime = 150;
+                gameState.level = 6;
+            } else {
+                gameState.frameTime = 100;
+                gameState.level = 7;
+            }
+
+            if (gameState.snake.appleCount <= 5) {
+                gameState.score += 10;
+            } else if (gameState.snake.appleCount <= 10) {
+                gameState.score += 20;
+            } else if (gameState.snake.appleCount <= 15) {
+                gameState.score += 30;
+            } else if (gameState.snake.appleCount <= 20) {
+                gameState.score += 40;
+            } else if (gameState.snake.appleCount <= 30) {
+                gameState.score += 50;
+            } else if (gameState.snake.appleCount <= 40) {
+                gameState.score += 60;
+            } else {
+                gameState.score += 70;
+            }
+
+            setAppleCount();
+            setLevel();
+            setScore();
         } else {
             gameState.snake.occupiedUnits.pop();
         }
@@ -182,7 +255,7 @@ function drawSnake() {
             gameState.snake.occupiedUnits[i].y * gameState.unitSize,
             gameState.unitSize,
             gameState.unitSize,
-            `rgb(150, 250, 150)`
+            gameState.snake.color
         );
     }
 }
@@ -194,7 +267,7 @@ function drawApple() {
         apple.y * gameState.unitSize,
         gameState.unitSize,
         gameState.unitSize,
-        `rgb(250, 150, 150)`
+        gameState.apple.color
     );
 }
 
@@ -202,6 +275,12 @@ function draw() {
     drawSnake();
     drawApple();
 }
+
+(function initializeGame() {
+    setAppleCount();
+    setLevel();
+    setScore();
+})();
 
 (function gameLoop(milliSeconds: number) {
     if ((milliSeconds - gameState.last) % 1000 > gameState.frameTime) {

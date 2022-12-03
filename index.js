@@ -4,6 +4,7 @@ var context = canvas.getContext('2d');
 var appleCount = document.getElementById('apple-count');
 var level = document.getElementById('level');
 var score = document.getElementById('score');
+var best = document.getElementById('best');
 var restart = document.getElementById('restart');
 function getUnOccupiedCoordinate(occupiedUnits) {
     var occupiedUnitsIndexes = [];
@@ -82,6 +83,9 @@ function setLevel() {
 }
 function setScore() {
     score.textContent = 'Score: ' + gameState.score.toString();
+}
+function setBest() {
+    best.textContent = 'Best: ' + window.localStorage.getItem('best');
 }
 var eventManager = {
     event: Direction.Down,
@@ -234,6 +238,11 @@ function update() {
                 restart.style.visibility = 'visible';
             }
         }
+        var localBest = window.localStorage.getItem('best');
+        if (parseInt(localBest) < gameState.score) {
+            window.localStorage.setItem('best', gameState.score.toString());
+            setBest();
+        }
     }
 }
 function drawRectangle(x, y, w, h, color) {
@@ -257,6 +266,11 @@ function draw() {
     setAppleCount();
     setLevel();
     setScore();
+    var localBest = window.localStorage.getItem('best');
+    if (localBest === null) {
+        window.localStorage.setItem('best', '0');
+    }
+    setBest();
 })();
 (function gameLoop(milliSeconds) {
     if ((milliSeconds - gameState.last) % 1000 > gameState.frameTime) {

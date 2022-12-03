@@ -112,16 +112,32 @@ function update() {
 
         switch (gameState.snake.direction) {
             case Direction.Up:
-                head.y--;
+                if (head.y === 0) {
+                    head.y = 14;
+                } else {
+                    head.y--;
+                }
                 break;
             case Direction.Left:
-                head.x--;
+                if (head.x === 0) {
+                    head.x = 19;
+                } else {
+                    head.x--;
+                }
                 break;
             case Direction.Right:
-                head.x++;
+                if ((head.x + 1) % 20 === 0) {
+                    head.x = 0;
+                } else {
+                    head.x++;
+                }
                 break;
             case Direction.Down:
-                head.y++;
+                if ((head.y + 1) % 15 === 0) {
+                    head.y = 0;
+                } else {
+                    head.y++;
+                }
                 break;
         }
 
@@ -158,7 +174,7 @@ function drawSnake() {
             gameState.snake.occupiedUnits[i].y * gameState.unitSize,
             gameState.unitSize,
             gameState.unitSize,
-            `rgb(240, 250, 240)`
+            `rgb(150, 250, 150)`
         );
     }
 }
@@ -185,7 +201,7 @@ function drawApple() {
         apple.y * gameState.unitSize,
         gameState.unitSize,
         gameState.unitSize,
-        `rgb(250, 240, 240)`
+        `rgb(250, 150, 150)`
     );
 }
 

@@ -9,5 +9,26 @@ body {
 
 #canvas {
     margin-top: 50px;
-    border: 1px solid black;
+    border: 3px solid black;
+}
+
+#restart {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+
+    padding: 25px 30px;
+    border: 3px solid black;
+    border-radius: 5px;
+    background-color: pink;
+    font-weight: bold;
+    font-size: 1.5rem;
+    visibility: hidden;
+}
+#restart:hover {
+    background-color: hotpink;
+}
+#restart:active {
+    background-color: palevioletred;
 }

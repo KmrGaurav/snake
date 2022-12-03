@@ -105,16 +105,36 @@ function update() {
         };
         switch (gameState.snake.direction) {
             case Direction.Up:
-                head.y--;
+                if (head.y === 0) {
+                    head.y = 14;
+                }
+                else {
+                    head.y--;
+                }
                 break;
             case Direction.Left:
-                head.x--;
+                if (head.x === 0) {
+                    head.x = 19;
+                }
+                else {
+                    head.x--;
+                }
                 break;
             case Direction.Right:
-                head.x++;
+                if ((head.x + 1) % 20 === 0) {
+                    head.x = 0;
+                }
+                else {
+                    head.x++;
+                }
                 break;
             case Direction.Down:
-                head.y++;
+                if ((head.y + 1) % 15 === 0) {
+                    head.y = 0;
+                }
+                else {
+                    head.y++;
+                }
                 break;
         }
         gameState.snake.occupiedUnits.unshift({ x: head.x, y: head.y });
@@ -140,7 +160,7 @@ function drawRectangle(x, y, w, h, color) {
 }
 function drawSnake() {
     for (var i = 0; i < gameState.snake.occupiedUnits.length; i++) {
-        drawRectangle(gameState.snake.occupiedUnits[i].x * gameState.unitSize, gameState.snake.occupiedUnits[i].y * gameState.unitSize, gameState.unitSize, gameState.unitSize, "rgb(240, 250, 240)");
+        drawRectangle(gameState.snake.occupiedUnits[i].x * gameState.unitSize, gameState.snake.occupiedUnits[i].y * gameState.unitSize, gameState.unitSize, gameState.unitSize, "rgb(150, 250, 150)");
     }
 }
 function getUnOccupiedCoordinate() {
@@ -157,7 +177,7 @@ function getUnOccupiedCoordinate() {
 }
 function drawApple() {
     var apple = gameState.apple.position;
-    drawRectangle(apple.x * gameState.unitSize, apple.y * gameState.unitSize, gameState.unitSize, gameState.unitSize, "rgb(250, 240, 240)");
+    drawRectangle(apple.x * gameState.unitSize, apple.y * gameState.unitSize, gameState.unitSize, gameState.unitSize, "rgb(250, 150, 150)");
 }
 function draw() {
     drawSnake();

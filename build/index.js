@@ -208,6 +208,7 @@ function update() {
         var apple = gameState.apple.position;
         if (head.x === apple.x && head.y === apple.y) {
             gameState.apple.position = getUnOccupiedCoordinate(gameState.snake.occupiedUnits);
+            gameState.score += 10 * gameState.level;
             gameState.snake.appleCount++;
             if (gameState.snake.appleCount < 5) {
                 gameState.frameTime = 900;
@@ -236,27 +237,6 @@ function update() {
             else {
                 gameState.frameTime = 100;
                 gameState.level = 7;
-            }
-            if (gameState.snake.appleCount <= 5) {
-                gameState.score += 10;
-            }
-            else if (gameState.snake.appleCount <= 10) {
-                gameState.score += 20;
-            }
-            else if (gameState.snake.appleCount <= 15) {
-                gameState.score += 30;
-            }
-            else if (gameState.snake.appleCount <= 20) {
-                gameState.score += 40;
-            }
-            else if (gameState.snake.appleCount <= 30) {
-                gameState.score += 50;
-            }
-            else if (gameState.snake.appleCount <= 40) {
-                gameState.score += 60;
-            }
-            else {
-                gameState.score += 70;
             }
             setAppleCount();
             setLevel();
@@ -332,16 +312,13 @@ function drawSnake() {
     }
 }
 function drawApple() {
-    var apple = gameState.apple.position;
-    drawRectangle(apple.x * gameState.unitSize, apple.y * gameState.unitSize, gameState.unitSize, gameState.unitSize, gameState.apple.color);
+    drawRectangle(gameState.apple.position.x * gameState.unitSize, gameState.apple.position.y * gameState.unitSize, gameState.unitSize, gameState.unitSize, gameState.apple.color);
 }
 function drawJump() {
-    var jump = gameState.jump.position;
-    drawRectangle(jump.x * gameState.unitSize, jump.y * gameState.unitSize, gameState.unitSize, gameState.unitSize, gameState.jump.color);
+    drawRectangle(gameState.jump.position.x * gameState.unitSize, gameState.jump.position.y * gameState.unitSize, gameState.unitSize, gameState.unitSize, gameState.jump.color);
 }
 function drawScissor() {
-    var scissor = gameState.scissor.position;
-    drawRectangle(scissor.x * gameState.unitSize, scissor.y * gameState.unitSize, gameState.unitSize, gameState.unitSize, gameState.scissor.color);
+    drawRectangle(gameState.scissor.position.x * gameState.unitSize, gameState.scissor.position.y * gameState.unitSize, gameState.unitSize, gameState.unitSize, gameState.scissor.color);
 }
 function draw() {
     drawSnake();

@@ -9,6 +9,9 @@ const best = document.getElementById('best')! as HTMLParagraphElement;
 const snakesJumpsAvailableElement = document.getElementById(
     'snakes-jumps-available'
 )! as HTMLParagraphElement;
+const snakesScissorsAvailableElement = document.getElementById(
+    'snakes-scissors-available'
+)! as HTMLParagraphElement;
 
 const restart = document.getElementById('restart')! as HTMLButtonElement;
 
@@ -47,11 +50,13 @@ restart.onclick = function () {
     gameState.score = 0;
 
     gameState.snake.jumpsAvailable = 0;
+    gameState.snake.scissorsAvailable = 0;
 
     setAppleCount();
     setLevel();
     setScore();
     setSnakesJumpCount();
+    setSnakesScissorCount();
 };
 
 canvas.width = 800;
@@ -85,7 +90,10 @@ const gameState = {
         color: `rgb(100, 150, 100)`,
         appleCount: 0,
         jumpsAvailable: 0,
+        scissorsAvailable: 0,
     },
+    level: 1,
+    score: 0,
     apple: {
         position: getUnOccupiedCoordinate([]),
         color: `rgb(150, 100, 100)`,
@@ -95,8 +103,11 @@ const gameState = {
         color: 'red',
         timeLeft: 0,
     },
-    level: 1,
-    score: 0,
+    scissor: {
+        position: { x: 0, y: 0 },
+        color: 'black',
+        timeLeft: 0,
+    },
 };
 
 function setAppleCount() {
@@ -117,6 +128,11 @@ function setBest() {
 
 function setSnakesJumpCount() {
     snakesJumpsAvailableElement.textContent = 'Jumps Available: ' + gameState.snake.jumpsAvailable;
+}
+
+function setSnakesScissorCount() {
+    snakesScissorsAvailableElement.textContent =
+        'Scissors Available: ' + gameState.snake.scissorsAvailable;
 }
 
 const eventManager = {
@@ -207,6 +223,9 @@ function update() {
         const apple = gameState.apple.position;
         if (head.x === apple.x && head.y === apple.y) {
             gameState.apple.position = getUnOccupiedCoordinate(gameState.snake.occupiedUnits);
+
+            gameState.score += 10 * gameState.level;
+
             gameState.snake.appleCount++;
 
             if (gameState.snake.appleCount < 5) {
@@ -232,28 +251,19 @@ function update() {
                 gameState.level = 7;
             }
 
-            if (gameState.snake.appleCount <= 5) {
-                gameState.score += 10;
-            } else if (gameState.snake.appleCount <= 10) {
-                gameState.score += 20;
-            } else if (gameState.snake.appleCount <= 15) {
-                gameState.score += 30;
-            } else if (gameState.snake.appleCount <= 20) {
-                gameState.score += 40;
-            } else if (gameState.snake.appleCount <= 30) {
-                gameState.score += 50;
-            } else if (gameState.snake.appleCount <= 40) {
-                gameState.score += 60;
-            } else {
-                gameState.score += 70;
-            }
-
             setAppleCount();
             setLevel();
             setScore();
 
-            if (gameState.jump.timeLeft === 0) {
-                if (Math.floor(Math.random() * 100) % 10 === 0) {
+            if (gameState.jump.timeLeft === 0 && gameState.scissor.timeLeft === 0) {
+                const random = Math.floor(Math.random() * 100);
+                if (random % 20 === 0) {
+                    gameState.scissor.position = getUnOccupiedCoordinate([
+                        ...gameState.snake.occupiedUnits,
+                        gameState.apple.position,
+                    ]);
+                    gameState.scissor.timeLeft = 20;
+                } else if (random % 10 === 0) {
                     gameState.jump.position = getUnOccupiedCoordinate([
                         ...gameState.snake.occupiedUnits,
                         gameState.apple.position,
@@ -265,11 +275,20 @@ function update() {
             gameState.snake.occupiedUnits.pop();
         }
 
-        const jumpsCoordinate = gameState.jump.position;
-        if (head.x === jumpsCoordinate.x && head.y === jumpsCoordinate.y) {
-            gameState.jump.timeLeft = 0;
-            gameState.snake.jumpsAvailable++;
-            setSnakesJumpCount();
+        if (gameState.jump.timeLeft) {
+            const jumpsCoordinate = gameState.jump.position;
+            if (head.x === jumpsCoordinate.x && head.y === jumpsCoordinate.y) {
+                gameState.jump.timeLeft = 0;
+                gameState.snake.jumpsAvailable++;
+                setSnakesJumpCount();
+            }
+        } else if (gameState.scissor.timeLeft) {
+            const scissorsCoordinate = gameState.scissor.position;
+            if (head.x === scissorsCoordinate.x && head.y === scissorsCoordinate.y) {
+                gameState.scissor.timeLeft = 0;
+                gameState.snake.scissorsAvailable++;
+                setSnakesScissorCount();
+            }
         }
 
         for (let i = 4; i < gameState.snake.occupiedUnits.length; i++) {
@@ -277,12 +296,18 @@ function update() {
                 head.x === gameState.snake.occupiedUnits[i].x &&
                 head.y === gameState.snake.occupiedUnits[i].y
             ) {
-                if (gameState.snake.jumpsAvailable === 0) {
-                    gameState.isGameRunning = false;
-                    restart.style.visibility = 'visible';
-                } else {
+                if (gameState.snake.jumpsAvailable) {
                     gameState.snake.jumpsAvailable--;
                     setSnakesJumpCount();
+                } else if (gameState.snake.scissorsAvailable) {
+                    gameState.snake.occupiedUnits = gameState.snake.occupiedUnits.slice(0, i);
+
+                    gameState.snake.scissorsAvailable--;
+                    setSnakesScissorCount();
+                    break;
+                } else {
+                    gameState.isGameRunning = false;
+                    restart.style.visibility = 'visible';
                 }
             }
         }
@@ -313,10 +338,9 @@ function drawSnake() {
 }
 
 function drawApple() {
-    const apple = gameState.apple.position;
     drawRectangle(
-        apple.x * gameState.unitSize,
-        apple.y * gameState.unitSize,
+        gameState.apple.position.x * gameState.unitSize,
+        gameState.apple.position.y * gameState.unitSize,
         gameState.unitSize,
         gameState.unitSize,
         gameState.apple.color
@@ -324,13 +348,22 @@ function drawApple() {
 }
 
 function drawJump() {
-    const jump = gameState.jump.position;
     drawRectangle(
-        jump.x * gameState.unitSize,
-        jump.y * gameState.unitSize,
+        gameState.jump.position.x * gameState.unitSize,
+        gameState.jump.position.y * gameState.unitSize,
         gameState.unitSize,
         gameState.unitSize,
-        `rgb(0, 255, 0)`
+        gameState.jump.color
+    );
+}
+
+function drawScissor() {
+    drawRectangle(
+        gameState.scissor.position.x * gameState.unitSize,
+        gameState.scissor.position.y * gameState.unitSize,
+        gameState.unitSize,
+        gameState.unitSize,
+        gameState.scissor.color
     );
 }
 
@@ -340,6 +373,10 @@ function draw() {
     if (gameState.jump.timeLeft) {
         drawJump();
         gameState.jump.timeLeft--;
+    }
+    if (gameState.scissor.timeLeft) {
+        drawScissor();
+        gameState.scissor.timeLeft--;
     }
 }
 
@@ -353,6 +390,7 @@ function draw() {
     }
     setBest();
     setSnakesJumpCount();
+    setSnakesScissorCount();
 })();
 
 (function gameLoop(milliSeconds: number) {

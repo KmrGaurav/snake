@@ -15,6 +15,7 @@ var level = document.getElementById('level');
 var score = document.getElementById('score');
 var best = document.getElementById('best');
 var snakesJumpsAvailableElement = document.getElementById('snakes-jumps-available');
+var snakesScissorsAvailableElement = document.getElementById('snakes-scissors-available');
 var restart = document.getElementById('restart');
 function getUnOccupiedCoordinate(occupiedUnits) {
     var occupiedUnitsIndexes = [];
@@ -45,10 +46,12 @@ restart.onclick = function () {
     gameState.level = 1;
     gameState.score = 0;
     gameState.snake.jumpsAvailable = 0;
+    gameState.snake.scissorsAvailable = 0;
     setAppleCount();
     setLevel();
     setScore();
     setSnakesJumpCount();
+    setSnakesScissorCount();
 };
 canvas.width = 800;
 canvas.height = 600;
@@ -80,7 +83,10 @@ var gameState = {
         color: "rgb(100, 150, 100)",
         appleCount: 0,
         jumpsAvailable: 0,
+        scissorsAvailable: 0,
     },
+    level: 1,
+    score: 0,
     apple: {
         position: getUnOccupiedCoordinate([]),
         color: "rgb(150, 100, 100)",
@@ -90,8 +96,11 @@ var gameState = {
         color: 'red',
         timeLeft: 0,
     },
-    level: 1,
-    score: 0,
+    scissor: {
+        position: { x: 0, y: 0 },
+        color: 'black',
+        timeLeft: 0,
+    },
 };
 function setAppleCount() {
     appleCount.textContent = 'Apple Count: ' + gameState.snake.appleCount.toString();
@@ -107,6 +116,10 @@ function setBest() {
 }
 function setSnakesJumpCount() {
     snakesJumpsAvailableElement.textContent = 'Jumps Available: ' + gameState.snake.jumpsAvailable;
+}
+function setSnakesScissorCount() {
+    snakesScissorsAvailableElement.textContent =
+        'Scissors Available: ' + gameState.snake.scissorsAvailable;
 }
 var eventManager = {
     event: Direction.Down,
@@ -195,6 +208,7 @@ function update() {
         var apple = gameState.apple.position;
         if (head.x === apple.x && head.y === apple.y) {
             gameState.apple.position = getUnOccupiedCoordinate(gameState.snake.occupiedUnits);
+            gameState.score += 10 * gameState.level;
             gameState.snake.appleCount++;
             if (gameState.snake.appleCount < 5) {
                 gameState.frameTime = 900;
@@ -224,32 +238,18 @@ function update() {
                 gameState.frameTime = 100;
                 gameState.level = 7;
             }
-            if (gameState.snake.appleCount <= 5) {
-                gameState.score += 10;
-            }
-            else if (gameState.snake.appleCount <= 10) {
-                gameState.score += 20;
-            }
-            else if (gameState.snake.appleCount <= 15) {
-                gameState.score += 30;
-            }
-            else if (gameState.snake.appleCount <= 20) {
-                gameState.score += 40;
-            }
-            else if (gameState.snake.appleCount <= 30) {
-                gameState.score += 50;
-            }
-            else if (gameState.snake.appleCount <= 40) {
-                gameState.score += 60;
-            }
-            else {
-                gameState.score += 70;
-            }
             setAppleCount();
             setLevel();
             setScore();
-            if (gameState.jump.timeLeft === 0) {
-                if (Math.floor(Math.random() * 100) % 10 === 0) {
+            if (gameState.jump.timeLeft === 0 && gameState.scissor.timeLeft === 0) {
+                var random = Math.floor(Math.random() * 100);
+                if (random % 20 === 0) {
+                    gameState.scissor.position = getUnOccupiedCoordinate(__spreadArray(__spreadArray([], gameState.snake.occupiedUnits, true), [
+                        gameState.apple.position,
+                    ], false));
+                    gameState.scissor.timeLeft = 20;
+                }
+                else if (random % 10 === 0) {
                     gameState.jump.position = getUnOccupiedCoordinate(__spreadArray(__spreadArray([], gameState.snake.occupiedUnits, true), [
                         gameState.apple.position,
                     ], false));
@@ -260,22 +260,38 @@ function update() {
         else {
             gameState.snake.occupiedUnits.pop();
         }
-        var jumpsCoordinate = gameState.jump.position;
-        if (head.x === jumpsCoordinate.x && head.y === jumpsCoordinate.y) {
-            gameState.jump.timeLeft = 0;
-            gameState.snake.jumpsAvailable++;
-            setSnakesJumpCount();
+        if (gameState.jump.timeLeft) {
+            var jumpsCoordinate = gameState.jump.position;
+            if (head.x === jumpsCoordinate.x && head.y === jumpsCoordinate.y) {
+                gameState.jump.timeLeft = 0;
+                gameState.snake.jumpsAvailable++;
+                setSnakesJumpCount();
+            }
+        }
+        else if (gameState.scissor.timeLeft) {
+            var scissorsCoordinate = gameState.scissor.position;
+            if (head.x === scissorsCoordinate.x && head.y === scissorsCoordinate.y) {
+                gameState.scissor.timeLeft = 0;
+                gameState.snake.scissorsAvailable++;
+                setSnakesScissorCount();
+            }
         }
         for (var i = 4; i < gameState.snake.occupiedUnits.length; i++) {
             if (head.x === gameState.snake.occupiedUnits[i].x &&
                 head.y === gameState.snake.occupiedUnits[i].y) {
-                if (gameState.snake.jumpsAvailable === 0) {
-                    gameState.isGameRunning = false;
-                    restart.style.visibility = 'visible';
-                }
-                else {
+                if (gameState.snake.jumpsAvailable) {
                     gameState.snake.jumpsAvailable--;
                     setSnakesJumpCount();
+                }
+                else if (gameState.snake.scissorsAvailable) {
+                    gameState.snake.occupiedUnits = gameState.snake.occupiedUnits.slice(0, i);
+                    gameState.snake.scissorsAvailable--;
+                    setSnakesScissorCount();
+                    break;
+                }
+                else {
+                    gameState.isGameRunning = false;
+                    restart.style.visibility = 'visible';
                 }
             }
         }
@@ -296,12 +312,13 @@ function drawSnake() {
     }
 }
 function drawApple() {
-    var apple = gameState.apple.position;
-    drawRectangle(apple.x * gameState.unitSize, apple.y * gameState.unitSize, gameState.unitSize, gameState.unitSize, gameState.apple.color);
+    drawRectangle(gameState.apple.position.x * gameState.unitSize, gameState.apple.position.y * gameState.unitSize, gameState.unitSize, gameState.unitSize, gameState.apple.color);
 }
 function drawJump() {
-    var jump = gameState.jump.position;
-    drawRectangle(jump.x * gameState.unitSize, jump.y * gameState.unitSize, gameState.unitSize, gameState.unitSize, "rgb(0, 255, 0)");
+    drawRectangle(gameState.jump.position.x * gameState.unitSize, gameState.jump.position.y * gameState.unitSize, gameState.unitSize, gameState.unitSize, gameState.jump.color);
+}
+function drawScissor() {
+    drawRectangle(gameState.scissor.position.x * gameState.unitSize, gameState.scissor.position.y * gameState.unitSize, gameState.unitSize, gameState.unitSize, gameState.scissor.color);
 }
 function draw() {
     drawSnake();
@@ -309,6 +326,10 @@ function draw() {
     if (gameState.jump.timeLeft) {
         drawJump();
         gameState.jump.timeLeft--;
+    }
+    if (gameState.scissor.timeLeft) {
+        drawScissor();
+        gameState.scissor.timeLeft--;
     }
 }
 (function initializeGame() {
@@ -321,6 +342,7 @@ function draw() {
     }
     setBest();
     setSnakesJumpCount();
+    setSnakesScissorCount();
 })();
 (function gameLoop(milliSeconds) {
     if ((milliSeconds - gameState.last) % 1000 > gameState.frameTime) {

@@ -1,10 +1,20 @@
 "use strict";
+var __spreadArray = (this && this.__spreadArray) || function (to, from, pack) {
+    if (pack || arguments.length === 2) for (var i = 0, l = from.length, ar; i < l; i++) {
+        if (ar || !(i in from)) {
+            if (!ar) ar = Array.prototype.slice.call(from, 0, i);
+            ar[i] = from[i];
+        }
+    }
+    return to.concat(ar || Array.prototype.slice.call(from));
+};
 var canvas = document.getElementById('canvas');
 var context = canvas.getContext('2d');
 var appleCount = document.getElementById('apple-count');
 var level = document.getElementById('level');
 var score = document.getElementById('score');
 var best = document.getElementById('best');
+var snakesJumpsAvailableElement = document.getElementById('snakes-jumps-available');
 var restart = document.getElementById('restart');
 function getUnOccupiedCoordinate(occupiedUnits) {
     var occupiedUnitsIndexes = [];
@@ -30,13 +40,15 @@ restart.onclick = function () {
         { x: 2, y: 3 },
     ];
     gameState.apple.position = getUnOccupiedCoordinate([]);
-    gameState.score = 0;
-    gameState.level = 1;
+    gameState.frameTime = 900;
     gameState.snake.appleCount = 0;
+    gameState.level = 1;
+    gameState.score = 0;
+    gameState.snake.jumpsAvailable = 0;
     setAppleCount();
     setLevel();
     setScore();
-    gameState.frameTime = 900;
+    setSnakesJumpCount();
 };
 canvas.width = 800;
 canvas.height = 600;
@@ -67,10 +79,16 @@ var gameState = {
         ],
         color: "rgb(100, 150, 100)",
         appleCount: 0,
+        jumpsAvailable: 0,
     },
     apple: {
         position: getUnOccupiedCoordinate([]),
         color: "rgb(150, 100, 100)",
+    },
+    jump: {
+        position: { x: 0, y: 0 },
+        color: 'red',
+        timeLeft: 0,
     },
     level: 1,
     score: 0,
@@ -86,6 +104,9 @@ function setScore() {
 }
 function setBest() {
     best.textContent = 'Best: ' + window.localStorage.getItem('best');
+}
+function setSnakesJumpCount() {
+    snakesJumpsAvailableElement.textContent = 'Jumps Available: ' + gameState.snake.jumpsAvailable;
 }
 var eventManager = {
     event: Direction.Down,
@@ -227,15 +248,35 @@ function update() {
             setAppleCount();
             setLevel();
             setScore();
+            if (gameState.jump.timeLeft === 0) {
+                if (Math.floor(Math.random() * 100) % 10 === 0) {
+                    gameState.jump.position = getUnOccupiedCoordinate(__spreadArray(__spreadArray([], gameState.snake.occupiedUnits, true), [
+                        gameState.apple.position,
+                    ], false));
+                    gameState.jump.timeLeft = 20;
+                }
+            }
         }
         else {
             gameState.snake.occupiedUnits.pop();
         }
+        var jumpsCoordinate = gameState.jump.position;
+        if (head.x === jumpsCoordinate.x && head.y === jumpsCoordinate.y) {
+            gameState.jump.timeLeft = 0;
+            gameState.snake.jumpsAvailable++;
+            setSnakesJumpCount();
+        }
         for (var i = 4; i < gameState.snake.occupiedUnits.length; i++) {
             if (head.x === gameState.snake.occupiedUnits[i].x &&
                 head.y === gameState.snake.occupiedUnits[i].y) {
-                gameState.isGameRunning = false;
-                restart.style.visibility = 'visible';
+                if (gameState.snake.jumpsAvailable === 0) {
+                    gameState.isGameRunning = false;
+                    restart.style.visibility = 'visible';
+                }
+                else {
+                    gameState.snake.jumpsAvailable--;
+                    setSnakesJumpCount();
+                }
             }
         }
         var localBest = window.localStorage.getItem('best');
@@ -258,9 +299,17 @@ function drawApple() {
     var apple = gameState.apple.position;
     drawRectangle(apple.x * gameState.unitSize, apple.y * gameState.unitSize, gameState.unitSize, gameState.unitSize, gameState.apple.color);
 }
+function drawJump() {
+    var jump = gameState.jump.position;
+    drawRectangle(jump.x * gameState.unitSize, jump.y * gameState.unitSize, gameState.unitSize, gameState.unitSize, "rgb(0, 255, 0)");
+}
 function draw() {
     drawSnake();
     drawApple();
+    if (gameState.jump.timeLeft) {
+        drawJump();
+        gameState.jump.timeLeft--;
+    }
 }
 (function initializeGame() {
     setAppleCount();
@@ -271,6 +320,7 @@ function draw() {
         window.localStorage.setItem('best', '0');
     }
     setBest();
+    setSnakesJumpCount();
 })();
 (function gameLoop(milliSeconds) {
     if ((milliSeconds - gameState.last) % 1000 > gameState.frameTime) {

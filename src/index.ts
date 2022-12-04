@@ -1,10 +1,14 @@
-const canvas = document.getElementById('canvas') as HTMLCanvasElement;
+const canvas = document.getElementById('canvas')! as HTMLCanvasElement;
 const context = canvas.getContext('2d')!;
 
 const appleCount = document.getElementById('apple-count')! as HTMLParagraphElement;
 const level = document.getElementById('level')! as HTMLParagraphElement;
 const score = document.getElementById('score')! as HTMLParagraphElement;
 const best = document.getElementById('best')! as HTMLParagraphElement;
+
+const snakesJumpsAvailableElement = document.getElementById(
+    'snakes-jumps-available'
+)! as HTMLParagraphElement;
 
 const restart = document.getElementById('restart')! as HTMLButtonElement;
 
@@ -36,13 +40,18 @@ restart.onclick = function () {
         { x: 2, y: 3 },
     ];
     gameState.apple.position = getUnOccupiedCoordinate([]);
-    gameState.score = 0;
-    gameState.level = 1;
+    gameState.frameTime = 900;
+
     gameState.snake.appleCount = 0;
+    gameState.level = 1;
+    gameState.score = 0;
+
+    gameState.snake.jumpsAvailable = 0;
+
     setAppleCount();
     setLevel();
     setScore();
-    gameState.frameTime = 900;
+    setSnakesJumpCount();
 };
 
 canvas.width = 800;
@@ -75,10 +84,16 @@ const gameState = {
         ],
         color: `rgb(100, 150, 100)`,
         appleCount: 0,
+        jumpsAvailable: 0,
     },
     apple: {
         position: getUnOccupiedCoordinate([]),
         color: `rgb(150, 100, 100)`,
+    },
+    jump: {
+        position: { x: 0, y: 0 },
+        color: 'red',
+        timeLeft: 0,
     },
     level: 1,
     score: 0,
@@ -98,6 +113,10 @@ function setScore() {
 
 function setBest() {
     best.textContent = 'Best: ' + window.localStorage.getItem('best');
+}
+
+function setSnakesJumpCount() {
+    snakesJumpsAvailableElement.textContent = 'Jumps Available: ' + gameState.snake.jumpsAvailable;
 }
 
 const eventManager = {
@@ -232,8 +251,25 @@ function update() {
             setAppleCount();
             setLevel();
             setScore();
+
+            if (gameState.jump.timeLeft === 0) {
+                if (Math.floor(Math.random() * 100) % 10 === 0) {
+                    gameState.jump.position = getUnOccupiedCoordinate([
+                        ...gameState.snake.occupiedUnits,
+                        gameState.apple.position,
+                    ]);
+                    gameState.jump.timeLeft = 20;
+                }
+            }
         } else {
             gameState.snake.occupiedUnits.pop();
+        }
+
+        const jumpsCoordinate = gameState.jump.position;
+        if (head.x === jumpsCoordinate.x && head.y === jumpsCoordinate.y) {
+            gameState.jump.timeLeft = 0;
+            gameState.snake.jumpsAvailable++;
+            setSnakesJumpCount();
         }
 
         for (let i = 4; i < gameState.snake.occupiedUnits.length; i++) {
@@ -241,8 +277,13 @@ function update() {
                 head.x === gameState.snake.occupiedUnits[i].x &&
                 head.y === gameState.snake.occupiedUnits[i].y
             ) {
-                gameState.isGameRunning = false;
-                restart.style.visibility = 'visible';
+                if (gameState.snake.jumpsAvailable === 0) {
+                    gameState.isGameRunning = false;
+                    restart.style.visibility = 'visible';
+                } else {
+                    gameState.snake.jumpsAvailable--;
+                    setSnakesJumpCount();
+                }
             }
         }
 
@@ -282,9 +323,24 @@ function drawApple() {
     );
 }
 
+function drawJump() {
+    const jump = gameState.jump.position;
+    drawRectangle(
+        jump.x * gameState.unitSize,
+        jump.y * gameState.unitSize,
+        gameState.unitSize,
+        gameState.unitSize,
+        `rgb(0, 255, 0)`
+    );
+}
+
 function draw() {
     drawSnake();
     drawApple();
+    if (gameState.jump.timeLeft) {
+        drawJump();
+        gameState.jump.timeLeft--;
+    }
 }
 
 (function initializeGame() {
@@ -296,6 +352,7 @@ function draw() {
         window.localStorage.setItem('best', '0');
     }
     setBest();
+    setSnakesJumpCount();
 })();
 
 (function gameLoop(milliSeconds: number) {

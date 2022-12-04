@@ -12,6 +12,7 @@ var canvas = document.getElementById('canvas');
 var context = canvas.getContext('2d');
 var appleCount = document.getElementById('apple-count');
 var level = document.getElementById('level');
+var snakesLengthElement = document.getElementById('snakes-length');
 var score = document.getElementById('score');
 var best = document.getElementById('best');
 var snakesJumpsAvailableElement = document.getElementById('snakes-jumps-available');
@@ -107,6 +108,9 @@ function setAppleCount() {
 }
 function setLevel() {
     level.textContent = 'Level: ' + gameState.level.toString();
+}
+function setSnakesLength() {
+    snakesLengthElement.textContent = 'Length: ' + gameState.snake.occupiedUnits.length;
 }
 function setScore() {
     score.textContent = 'Score: ' + gameState.score.toString();
@@ -240,6 +244,7 @@ function update() {
             }
             setAppleCount();
             setLevel();
+            setSnakesLength();
             setScore();
             if (gameState.jump.timeLeft === 0 && gameState.scissor.timeLeft === 0) {
                 var random = Math.floor(Math.random() * 100);
@@ -263,6 +268,8 @@ function update() {
         if (gameState.jump.timeLeft) {
             var jumpsCoordinate = gameState.jump.position;
             if (head.x === jumpsCoordinate.x && head.y === jumpsCoordinate.y) {
+                gameState.score += 2 * gameState.jump.timeLeft * gameState.level;
+                setScore();
                 gameState.jump.timeLeft = 0;
                 gameState.snake.jumpsAvailable++;
                 setSnakesJumpCount();
@@ -271,6 +278,8 @@ function update() {
         else if (gameState.scissor.timeLeft) {
             var scissorsCoordinate = gameState.scissor.position;
             if (head.x === scissorsCoordinate.x && head.y === scissorsCoordinate.y) {
+                gameState.score += 3 * gameState.scissor.timeLeft * gameState.level;
+                setScore();
                 gameState.scissor.timeLeft = 0;
                 gameState.snake.scissorsAvailable++;
                 setSnakesScissorCount();
@@ -284,7 +293,12 @@ function update() {
                     setSnakesJumpCount();
                 }
                 else if (gameState.snake.scissorsAvailable) {
+                    gameState.score += (gameState.snake.occupiedUnits.length - i) * 20;
+                    setScore();
                     gameState.snake.occupiedUnits = gameState.snake.occupiedUnits.slice(0, i);
+                    setSnakesLength();
+                    gameState.score += (gameState.snake.occupiedUnits.length - i) * 20;
+                    setScore();
                     gameState.snake.scissorsAvailable--;
                     setSnakesScissorCount();
                     break;
@@ -335,6 +349,7 @@ function draw() {
 (function initializeGame() {
     setAppleCount();
     setLevel();
+    setSnakesLength();
     setScore();
     var localBest = window.localStorage.getItem('best');
     if (localBest === null) {

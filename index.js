@@ -263,6 +263,8 @@ function update() {
         if (gameState.jump.timeLeft) {
             var jumpsCoordinate = gameState.jump.position;
             if (head.x === jumpsCoordinate.x && head.y === jumpsCoordinate.y) {
+                gameState.score += 2 * gameState.jump.timeLeft * gameState.level;
+                setScore();
                 gameState.jump.timeLeft = 0;
                 gameState.snake.jumpsAvailable++;
                 setSnakesJumpCount();
@@ -271,6 +273,8 @@ function update() {
         else if (gameState.scissor.timeLeft) {
             var scissorsCoordinate = gameState.scissor.position;
             if (head.x === scissorsCoordinate.x && head.y === scissorsCoordinate.y) {
+                gameState.score += 3 * gameState.scissor.timeLeft * gameState.level;
+                setScore();
                 gameState.scissor.timeLeft = 0;
                 gameState.snake.scissorsAvailable++;
                 setSnakesScissorCount();

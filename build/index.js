@@ -31,11 +31,15 @@ function getUnOccupiedCoordinate(occupiedUnits) {
 }
 function getSnakesInitialOccupiedUnits() {
     return [
+        { x: 2, y: 8 },
         { x: 2, y: 7 },
         { x: 2, y: 6 },
         { x: 2, y: 5 },
         { x: 2, y: 4 },
         { x: 2, y: 3 },
+        { x: 2, y: 2 },
+        { x: 2, y: 1 },
+        { x: 2, y: 0 },
     ];
 }
 restart.onclick = function () {
@@ -80,8 +84,8 @@ var gameState = {
         occupiedUnits: getSnakesInitialOccupiedUnits(),
         color: "rgb(100, 150, 100)",
         appleCount: 0,
-        jumpsAvailable: 0,
-        scissorsAvailable: 0,
+        jumpsAvailable: 1,
+        scissorsAvailable: 1,
     },
     level: 1,
     score: 0,
@@ -285,7 +289,23 @@ function update() {
         for (var i = 4; i < gameState.snake.occupiedUnits.length; i++) {
             if (head.x === gameState.snake.occupiedUnits[i].x &&
                 head.y === gameState.snake.occupiedUnits[i].y) {
-                if (gameState.snake.jumpsAvailable) {
+                if (gameState.snake.jumpsAvailable && gameState.snake.scissorsAvailable) {
+                    if (i > gameState.snake.occupiedUnits.length / 2) {
+                        gameState.snake.jumpsAvailable--;
+                        setSnakesJumpCount();
+                    }
+                    else {
+                        gameState.score += (gameState.snake.occupiedUnits.length - i) * 20;
+                        setScore();
+                        gameState.snake.occupiedUnits = gameState.snake.occupiedUnits.slice(0, i);
+                        setSnakesLength();
+                        gameState.score += (gameState.snake.occupiedUnits.length - i) * 20;
+                        setScore();
+                        gameState.snake.scissorsAvailable--;
+                        setSnakesScissorCount();
+                    }
+                }
+                else if (gameState.snake.jumpsAvailable) {
                     gameState.snake.jumpsAvailable--;
                     setSnakesJumpCount();
                 }
@@ -298,7 +318,6 @@ function update() {
                     setScore();
                     gameState.snake.scissorsAvailable--;
                     setSnakesScissorCount();
-                    break;
                 }
                 else {
                     gameState.isGameRunning = false;

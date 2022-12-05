@@ -29,18 +29,21 @@ function getUnOccupiedCoordinate(occupiedUnits) {
     }
     return { x: random % 20, y: Math.floor(random / 20) };
 }
-restart.onclick = function () {
-    gameState.isGameRunning = true;
-    restart.style.visibility = 'hidden';
-    eventManager.event = Direction.Down;
-    gameState.snake.direction = Direction.Down;
-    gameState.snake.occupiedUnits = [
+function getSnakesInitialOccupiedUnits() {
+    return [
         { x: 2, y: 7 },
         { x: 2, y: 6 },
         { x: 2, y: 5 },
         { x: 2, y: 4 },
         { x: 2, y: 3 },
     ];
+}
+restart.onclick = function () {
+    gameState.isGameRunning = true;
+    restart.style.visibility = 'hidden';
+    eventManager.event = Direction.Down;
+    gameState.snake.direction = Direction.Down;
+    gameState.snake.occupiedUnits = getSnakesInitialOccupiedUnits();
     gameState.apple.position = getUnOccupiedCoordinate([]);
     gameState.frameTime = 900;
     gameState.snake.appleCount = 0;
@@ -74,13 +77,7 @@ var gameState = {
     },
     snake: {
         direction: Direction.Down,
-        occupiedUnits: [
-            { x: 2, y: 7 },
-            { x: 2, y: 6 },
-            { x: 2, y: 5 },
-            { x: 2, y: 4 },
-            { x: 2, y: 3 },
-        ],
+        occupiedUnits: getSnakesInitialOccupiedUnits(),
         color: "rgb(100, 150, 100)",
         appleCount: 0,
         jumpsAvailable: 0,
@@ -89,7 +86,7 @@ var gameState = {
     level: 1,
     score: 0,
     apple: {
-        position: getUnOccupiedCoordinate([]),
+        position: getUnOccupiedCoordinate(getSnakesInitialOccupiedUnits()),
         color: "rgb(150, 100, 100)",
     },
     jump: {

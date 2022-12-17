@@ -59,6 +59,11 @@ restart.onclick = function () {
 };
 canvas.width = 800;
 canvas.height = 600;
+function getImage(srcPath) {
+    var image = new Image();
+    image.src = srcPath;
+    return image;
+}
 var Direction;
 (function (Direction) {
     Direction[Direction["Up"] = 0] = "Up";
@@ -89,7 +94,8 @@ var gameState = {
     score: 0,
     apple: {
         position: getUnOccupiedCoordinate(getSnakesInitialOccupiedUnits()),
-        color: "rgb(150, 100, 100)",
+        // color: `rgb(150, 100, 100)`,
+        image: getImage('assets/apple.png'),
     },
     jump: {
         position: { x: 0, y: 0 },
@@ -340,7 +346,14 @@ function drawSnake() {
     }
 }
 function drawApple() {
-    drawRectangle(gameState.apple.position.x * gameState.unitSize, gameState.apple.position.y * gameState.unitSize, gameState.unitSize, gameState.unitSize, gameState.apple.color);
+    // drawRectangle(
+    //     gameState.apple.position.x * gameState.unitSize,
+    //     gameState.apple.position.y * gameState.unitSize,
+    //     gameState.unitSize,
+    //     gameState.unitSize,
+    //     gameState.apple.color
+    // );
+    context.drawImage(gameState.apple.image, gameState.apple.position.x * gameState.unitSize, gameState.apple.position.y * gameState.unitSize, gameState.unitSize, gameState.unitSize);
 }
 function drawJump() {
     drawRectangle(gameState.jump.position.x * gameState.unitSize, gameState.jump.position.y * gameState.unitSize, gameState.unitSize, gameState.unitSize, gameState.jump.color);

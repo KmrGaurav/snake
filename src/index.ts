@@ -67,6 +67,12 @@ restart.onclick = function () {
 canvas.width = 800;
 canvas.height = 600;
 
+function getImage(srcPath: string) {
+    const image = new Image();
+    image.src = srcPath;
+    return image;
+}
+
 enum Direction {
     Up,
     Left,
@@ -97,7 +103,8 @@ const gameState = {
     score: 0,
     apple: {
         position: getUnOccupiedCoordinate(getSnakesInitialOccupiedUnits()),
-        color: `rgb(150, 100, 100)`,
+        // color: `rgb(150, 100, 100)`,
+        image: getImage('assets/apple.png'),
     },
     jump: {
         position: { x: 0, y: 0 },
@@ -369,12 +376,19 @@ function drawSnake() {
 }
 
 function drawApple() {
-    drawRectangle(
+    // drawRectangle(
+    //     gameState.apple.position.x * gameState.unitSize,
+    //     gameState.apple.position.y * gameState.unitSize,
+    //     gameState.unitSize,
+    //     gameState.unitSize,
+    //     gameState.apple.color
+    // );
+    context.drawImage(
+        gameState.apple.image,
         gameState.apple.position.x * gameState.unitSize,
         gameState.apple.position.y * gameState.unitSize,
         gameState.unitSize,
-        gameState.unitSize,
-        gameState.apple.color
+        gameState.unitSize
     );
 }
 

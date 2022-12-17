@@ -98,6 +98,14 @@ const gameState = {
         appleCount: 0,
         jumpsAvailable: 0,
         scissorsAvailable: 0,
+        images: {
+            head: {
+                Up: getImage('assets/head_up.png'),
+                Left: getImage('assets/head_left.png'),
+                Right: getImage('assets/head_right.png'),
+                Down: getImage('assets/head_down.png'),
+            },
+        },
     },
     level: 1,
     score: 0,
@@ -364,7 +372,27 @@ function drawRectangle(x: number, y: number, w: number, h: number, color: string
 }
 
 function drawSnake() {
-    for (let i = 0; i < gameState.snake.occupiedUnits.length; i++) {
+    function getHeadsImageAccordingToDirection(): any {
+        switch (gameState.snake.direction) {
+            case Direction.Up:
+                return gameState.snake.images.head.Up;
+            case Direction.Left:
+                return gameState.snake.images.head.Left;
+            case Direction.Right:
+                return gameState.snake.images.head.Right;
+            case Direction.Down:
+                return gameState.snake.images.head.Down;
+        }
+    }
+
+    context.drawImage(
+        getHeadsImageAccordingToDirection(),
+        gameState.snake.occupiedUnits[0].x * gameState.unitSize,
+        gameState.snake.occupiedUnits[0].y * gameState.unitSize,
+        gameState.unitSize,
+        gameState.unitSize
+    );
+    for (let i = 1; i < gameState.snake.occupiedUnits.length; i++) {
         drawRectangle(
             gameState.snake.occupiedUnits[i].x * gameState.unitSize,
             gameState.snake.occupiedUnits[i].y * gameState.unitSize,

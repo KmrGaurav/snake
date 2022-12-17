@@ -32,15 +32,11 @@ function getUnOccupiedCoordinate(occupiedUnits: { x: number; y: number }[]) {
 
 function getSnakesInitialOccupiedUnits() {
     return [
-        { x: 2, y: 8 },
         { x: 2, y: 7 },
         { x: 2, y: 6 },
         { x: 2, y: 5 },
         { x: 2, y: 4 },
         { x: 2, y: 3 },
-        { x: 2, y: 2 },
-        { x: 2, y: 1 },
-        { x: 2, y: 0 },
     ];
 }
 
@@ -52,7 +48,7 @@ restart.onclick = function () {
     gameState.snake.direction = Direction.Down;
     gameState.snake.occupiedUnits = getSnakesInitialOccupiedUnits();
     gameState.apple.position = getUnOccupiedCoordinate([]);
-    gameState.frameTime = 900;
+    gameState.time.frameTime = 900;
 
     gameState.snake.appleCount = 0;
     gameState.level = 1;
@@ -80,8 +76,10 @@ enum Direction {
 
 const gameState = {
     isGameRunning: true,
-    frameTime: 900,
-    last: 0,
+    time: {
+        frameTime: 900,
+        last: 0,
+    },
     unitSize: 40,
     dimenstions: {
         width: 20,
@@ -92,8 +90,8 @@ const gameState = {
         occupiedUnits: getSnakesInitialOccupiedUnits(),
         color: `rgb(100, 150, 100)`,
         appleCount: 0,
-        jumpsAvailable: 1,
-        scissorsAvailable: 1,
+        jumpsAvailable: 0,
+        scissorsAvailable: 0,
     },
     level: 1,
     score: 0,
@@ -236,25 +234,25 @@ function update() {
             gameState.snake.appleCount++;
 
             if (gameState.snake.appleCount < 5) {
-                gameState.frameTime = 900;
+                gameState.time.frameTime = 900;
                 gameState.level = 1;
             } else if (gameState.snake.appleCount < 10) {
-                gameState.frameTime = 700;
+                gameState.time.frameTime = 700;
                 gameState.level = 2;
             } else if (gameState.snake.appleCount < 15) {
-                gameState.frameTime = 500;
+                gameState.time.frameTime = 500;
                 gameState.level = 3;
             } else if (gameState.snake.appleCount < 20) {
-                gameState.frameTime = 300;
+                gameState.time.frameTime = 300;
                 gameState.level = 4;
             } else if (gameState.snake.appleCount < 30) {
-                gameState.frameTime = 200;
+                gameState.time.frameTime = 200;
                 gameState.level = 5;
             } else if (gameState.snake.appleCount < 40) {
-                gameState.frameTime = 150;
+                gameState.time.frameTime = 150;
                 gameState.level = 6;
             } else {
-                gameState.frameTime = 100;
+                gameState.time.frameTime = 100;
                 gameState.level = 7;
             }
 
@@ -427,13 +425,14 @@ function draw() {
     setSnakesScissorCount();
 })();
 
-(function gameLoop(milliSeconds: number) {
-    if ((milliSeconds - gameState.last) % 1000 > gameState.frameTime) {
+(function gameLoop(now: number) {
+    const delta = now - gameState.time.last;
+    if (delta > gameState.time.frameTime) {
         eventManager.handleEvents();
         update();
         context.clearRect(0, 0, canvas.width, canvas.height);
         draw();
-        gameState.last = milliSeconds;
+        gameState.time.last = now;
     }
     window.requestAnimationFrame(gameLoop);
 })(0);

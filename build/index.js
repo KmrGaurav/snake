@@ -31,11 +31,11 @@ function getUnOccupiedCoordinate(occupiedUnits) {
 }
 function getSnakesInitialOccupiedUnits() {
     return [
-        { x: 2, y: 7, kind: Kind.Vertical },
-        { x: 2, y: 6, kind: Kind.Vertical },
-        { x: 2, y: 5, kind: Kind.Vertical },
-        { x: 2, y: 4, kind: Kind.Vertical },
-        { x: 2, y: 3, kind: Kind.Vertical },
+        { x: 2, y: 7, direction: Direction.Down, kind: Kind.Vertical },
+        { x: 2, y: 6, direction: Direction.Down, kind: Kind.Vertical },
+        { x: 2, y: 5, direction: Direction.Down, kind: Kind.Vertical },
+        { x: 2, y: 4, direction: Direction.Down, kind: Kind.Vertical },
+        { x: 2, y: 3, direction: Direction.Down, kind: Kind.Vertical },
     ];
 }
 restart.onclick = function () {
@@ -112,6 +112,12 @@ var gameState = {
                 topRight: getImage('assets/body_topright.png'),
                 bottomLeft: getImage('assets/body_bottomleft.png'),
                 bottomRight: getImage('assets/body_bottomright.png'),
+            },
+            tail: {
+                up: getImage('assets/tail_up.png'),
+                left: getImage('assets/tail_left.png'),
+                right: getImage('assets/tail_right.png'),
+                down: getImage('assets/tail_down.png'),
             },
         },
     },
@@ -212,6 +218,7 @@ function update() {
                 else {
                     newHead.y--;
                 }
+                newHead.direction = Direction.Up;
                 newHead.kind = Kind.Vertical;
                 break;
             case Direction.Left:
@@ -221,6 +228,7 @@ function update() {
                 else {
                     newHead.x--;
                 }
+                newHead.direction = Direction.Left;
                 newHead.kind = Kind.Horizontal;
                 break;
             case Direction.Right:
@@ -230,6 +238,7 @@ function update() {
                 else {
                     newHead.x++;
                 }
+                newHead.direction = Direction.Right;
                 newHead.kind = Kind.Horizontal;
                 break;
             case Direction.Down:
@@ -239,9 +248,11 @@ function update() {
                 else {
                     newHead.y++;
                 }
+                newHead.direction = Direction.Down;
                 newHead.kind = Kind.Vertical;
                 break;
         }
+        /* Setting the body corners */
         var oldHead = gameState.snake.occupiedUnits[0];
         var secondUnit = gameState.snake.occupiedUnits[1];
         if (secondUnit.y === oldHead.y) {
@@ -280,7 +291,9 @@ function update() {
                 }
             }
         }
+        oldHead.direction = newHead.direction;
         gameState.snake.occupiedUnits[0] = oldHead;
+        /* Setting the body corners */
         gameState.snake.occupiedUnits.unshift(newHead);
         var apple = gameState.apple.position;
         if (newHead.x === apple.x && newHead.y === apple.y) {
@@ -447,7 +460,8 @@ function drawSnake() {
         }
         return image;
     }
-    for (var i = 1; i < gameState.snake.occupiedUnits.length; i++) {
+    var length = gameState.snake.occupiedUnits.length;
+    for (var i = 1; i < length - 1; i++) {
         // drawRectangle(
         //     gameState.snake.occupiedUnits[i].x * gameState.unitSize,
         //     gameState.snake.occupiedUnits[i].y * gameState.unitSize,
@@ -457,6 +471,26 @@ function drawSnake() {
         // );
         context.drawImage(getBodysImage(gameState.snake.occupiedUnits[i]), gameState.snake.occupiedUnits[i].x * gameState.unitSize, gameState.snake.occupiedUnits[i].y * gameState.unitSize, gameState.unitSize, gameState.unitSize);
     }
+    function getTailsImage() {
+        var image;
+        var tailUnit = gameState.snake.occupiedUnits[length - 1];
+        switch (tailUnit.direction) {
+            case Direction.Up:
+                image = gameState.snake.images.tail.up;
+                break;
+            case Direction.Left:
+                image = gameState.snake.images.tail.left;
+                break;
+            case Direction.Right:
+                image = gameState.snake.images.tail.right;
+                break;
+            case Direction.Down:
+                image = gameState.snake.images.tail.down;
+                break;
+        }
+        return image;
+    }
+    context.drawImage(getTailsImage(), gameState.snake.occupiedUnits[length - 1].x * gameState.unitSize, gameState.snake.occupiedUnits[length - 1].y * gameState.unitSize, gameState.unitSize, gameState.unitSize);
 }
 function drawApple() {
     // drawRectangle(

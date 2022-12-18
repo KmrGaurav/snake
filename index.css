@@ -50,6 +50,12 @@ body {
     color: green;
 }
 
+#powers {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
 #game {
     display: flex;
     justify-content: center;

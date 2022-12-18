@@ -31,11 +31,11 @@ function getUnOccupiedCoordinate(occupiedUnits) {
 }
 function getSnakesInitialOccupiedUnits() {
     return [
-        { x: 2, y: 7 },
-        { x: 2, y: 6 },
-        { x: 2, y: 5 },
-        { x: 2, y: 4 },
-        { x: 2, y: 3 },
+        { x: 2, y: 7, direction: Direction.Down, kind: Kind.Vertical },
+        { x: 2, y: 6, direction: Direction.Down, kind: Kind.Vertical },
+        { x: 2, y: 5, direction: Direction.Down, kind: Kind.Vertical },
+        { x: 2, y: 4, direction: Direction.Down, kind: Kind.Vertical },
+        { x: 2, y: 3, direction: Direction.Down, kind: Kind.Vertical },
     ];
 }
 restart.onclick = function () {
@@ -59,6 +59,11 @@ restart.onclick = function () {
 };
 canvas.width = 800;
 canvas.height = 600;
+function getImage(srcPath) {
+    var image = new Image();
+    image.src = srcPath;
+    return image;
+}
 var Direction;
 (function (Direction) {
     Direction[Direction["Up"] = 0] = "Up";
@@ -66,6 +71,15 @@ var Direction;
     Direction[Direction["Right"] = 2] = "Right";
     Direction[Direction["Down"] = 3] = "Down";
 })(Direction || (Direction = {}));
+var Kind;
+(function (Kind) {
+    Kind[Kind["Vertical"] = 0] = "Vertical";
+    Kind[Kind["Horizontal"] = 1] = "Horizontal";
+    Kind[Kind["TopLeft"] = 2] = "TopLeft";
+    Kind[Kind["TopRight"] = 3] = "TopRight";
+    Kind[Kind["BottomLeft"] = 4] = "BottomLeft";
+    Kind[Kind["BottomRight"] = 5] = "BottomRight";
+})(Kind || (Kind = {}));
 var gameState = {
     isGameRunning: true,
     time: {
@@ -84,12 +98,35 @@ var gameState = {
         appleCount: 0,
         jumpsAvailable: 0,
         scissorsAvailable: 0,
+        images: {
+            head: {
+                up: getImage('assets/head_up.png'),
+                left: getImage('assets/head_left.png'),
+                right: getImage('assets/head_right.png'),
+                down: getImage('assets/head_down.png'),
+            },
+            body: {
+                horizontal: getImage('assets/body_horizontal.png'),
+                vertical: getImage('assets/body_vertical.png'),
+                topLeft: getImage('assets/body_topleft.png'),
+                topRight: getImage('assets/body_topright.png'),
+                bottomLeft: getImage('assets/body_bottomleft.png'),
+                bottomRight: getImage('assets/body_bottomright.png'),
+            },
+            tail: {
+                up: getImage('assets/tail_up.png'),
+                left: getImage('assets/tail_left.png'),
+                right: getImage('assets/tail_right.png'),
+                down: getImage('assets/tail_down.png'),
+            },
+        },
     },
     level: 1,
     score: 0,
     apple: {
         position: getUnOccupiedCoordinate(getSnakesInitialOccupiedUnits()),
-        color: "rgb(150, 100, 100)",
+        // color: `rgb(150, 100, 100)`,
+        image: getImage('assets/apple.png'),
     },
     jump: {
         position: { x: 0, y: 0 },
@@ -118,11 +155,10 @@ function setBest() {
     best.textContent = 'Best: ' + window.localStorage.getItem('best');
 }
 function setSnakesJumpCount() {
-    snakesJumpsAvailableElement.textContent = 'Jumps Available: ' + gameState.snake.jumpsAvailable;
+    snakesJumpsAvailableElement.textContent = gameState.snake.jumpsAvailable.toString();
 }
 function setSnakesScissorCount() {
-    snakesScissorsAvailableElement.textContent =
-        'Scissors Available: ' + gameState.snake.scissorsAvailable;
+    snakesScissorsAvailableElement.textContent = gameState.snake.scissorsAvailable.toString();
 }
 var eventManager = {
     event: Direction.Down,
@@ -169,47 +205,97 @@ document.addEventListener('keydown', function (event) {
 });
 function update() {
     if (gameState.isGameRunning) {
-        var head = {
+        var newHead = {
             x: gameState.snake.occupiedUnits[0].x,
             y: gameState.snake.occupiedUnits[0].y,
         };
         switch (gameState.snake.direction) {
             case Direction.Up:
-                if (head.y === 0) {
-                    head.y = gameState.dimenstions.height - 1;
+                if (newHead.y === 0) {
+                    newHead.y = gameState.dimenstions.height - 1;
                 }
                 else {
-                    head.y--;
+                    newHead.y--;
                 }
+                newHead.direction = Direction.Up;
+                newHead.kind = Kind.Vertical;
                 break;
             case Direction.Left:
-                if (head.x === 0) {
-                    head.x = gameState.dimenstions.width - 1;
+                if (newHead.x === 0) {
+                    newHead.x = gameState.dimenstions.width - 1;
                 }
                 else {
-                    head.x--;
+                    newHead.x--;
                 }
+                newHead.direction = Direction.Left;
+                newHead.kind = Kind.Horizontal;
                 break;
             case Direction.Right:
-                if ((head.x + 1) % gameState.dimenstions.width === 0) {
-                    head.x = 0;
+                if ((newHead.x + 1) % gameState.dimenstions.width === 0) {
+                    newHead.x = 0;
                 }
                 else {
-                    head.x++;
+                    newHead.x++;
                 }
+                newHead.direction = Direction.Right;
+                newHead.kind = Kind.Horizontal;
                 break;
             case Direction.Down:
-                if ((head.y + 1) % gameState.dimenstions.height === 0) {
-                    head.y = 0;
+                if ((newHead.y + 1) % gameState.dimenstions.height === 0) {
+                    newHead.y = 0;
                 }
                 else {
-                    head.y++;
+                    newHead.y++;
                 }
+                newHead.direction = Direction.Down;
+                newHead.kind = Kind.Vertical;
                 break;
         }
-        gameState.snake.occupiedUnits.unshift({ x: head.x, y: head.y });
+        /* Setting the body corners */
+        var oldHead = gameState.snake.occupiedUnits[0];
+        var secondUnit = gameState.snake.occupiedUnits[1];
+        if (secondUnit.y === oldHead.y) {
+            if (secondUnit.x + 1 === oldHead.x || secondUnit.x === oldHead.x + 19) {
+                if (oldHead.y === newHead.y + 1 || oldHead.y + 14 === newHead.y) {
+                    oldHead.kind = Kind.BottomRight;
+                }
+                else if (oldHead.y === newHead.y - 1 || oldHead.y - 14 === newHead.y) {
+                    oldHead.kind = Kind.TopRight;
+                }
+            }
+            else if (secondUnit.x - 1 === oldHead.x || secondUnit.x === oldHead.x - 19) {
+                if (oldHead.y === newHead.y + 1 || oldHead.y + 14 === newHead.y) {
+                    oldHead.kind = Kind.BottomLeft;
+                }
+                else if (oldHead.y === newHead.y - 1 || oldHead.y - 14 === newHead.y) {
+                    oldHead.kind = Kind.TopLeft;
+                }
+            }
+        }
+        else {
+            if (secondUnit.y + 1 === oldHead.y || secondUnit.y === oldHead.y + 14) {
+                if (oldHead.x === newHead.x + 1 || oldHead.x + 19 === newHead.x) {
+                    oldHead.kind = Kind.BottomRight;
+                }
+                else if (oldHead.x === newHead.x - 1 || oldHead.x - 19 === newHead.x) {
+                    oldHead.kind = Kind.BottomLeft;
+                }
+            }
+            else if (secondUnit.y - 1 === oldHead.y || secondUnit.y === oldHead.y - 14) {
+                if (oldHead.x === newHead.x + 1 || oldHead.x + 19 === newHead.x) {
+                    oldHead.kind = Kind.TopRight;
+                }
+                else if (oldHead.x === newHead.x - 1 || oldHead.x - 19 === newHead.x) {
+                    oldHead.kind = Kind.TopLeft;
+                }
+            }
+        }
+        oldHead.direction = newHead.direction;
+        gameState.snake.occupiedUnits[0] = oldHead;
+        /* Setting the body corners */
+        gameState.snake.occupiedUnits.unshift(newHead);
         var apple = gameState.apple.position;
-        if (head.x === apple.x && head.y === apple.y) {
+        if (newHead.x === apple.x && newHead.y === apple.y) {
             gameState.apple.position = getUnOccupiedCoordinate(gameState.snake.occupiedUnits);
             gameState.score += 10 * gameState.level;
             gameState.snake.appleCount++;
@@ -266,7 +352,7 @@ function update() {
         }
         if (gameState.jump.timeLeft) {
             var jumpsCoordinate = gameState.jump.position;
-            if (head.x === jumpsCoordinate.x && head.y === jumpsCoordinate.y) {
+            if (newHead.x === jumpsCoordinate.x && newHead.y === jumpsCoordinate.y) {
                 gameState.score += 2 * gameState.jump.timeLeft * gameState.level;
                 setScore();
                 gameState.jump.timeLeft = 0;
@@ -276,7 +362,7 @@ function update() {
         }
         else if (gameState.scissor.timeLeft) {
             var scissorsCoordinate = gameState.scissor.position;
-            if (head.x === scissorsCoordinate.x && head.y === scissorsCoordinate.y) {
+            if (newHead.x === scissorsCoordinate.x && newHead.y === scissorsCoordinate.y) {
                 gameState.score += 3 * gameState.scissor.timeLeft * gameState.level;
                 setScore();
                 gameState.scissor.timeLeft = 0;
@@ -285,8 +371,8 @@ function update() {
             }
         }
         for (var i = 4; i < gameState.snake.occupiedUnits.length; i++) {
-            if (head.x === gameState.snake.occupiedUnits[i].x &&
-                head.y === gameState.snake.occupiedUnits[i].y) {
+            if (newHead.x === gameState.snake.occupiedUnits[i].x &&
+                newHead.y === gameState.snake.occupiedUnits[i].y) {
                 if (gameState.snake.jumpsAvailable && gameState.snake.scissorsAvailable) {
                     if (i > gameState.snake.occupiedUnits.length / 2) {
                         gameState.snake.jumpsAvailable--;
@@ -335,18 +421,105 @@ function drawRectangle(x, y, w, h, color) {
     context.fillRect(x, y, w, h);
 }
 function drawSnake() {
-    for (var i = 0; i < gameState.snake.occupiedUnits.length; i++) {
-        drawRectangle(gameState.snake.occupiedUnits[i].x * gameState.unitSize, gameState.snake.occupiedUnits[i].y * gameState.unitSize, gameState.unitSize, gameState.unitSize, gameState.snake.color);
+    function getHeadsImageAccordingToDirection() {
+        switch (gameState.snake.direction) {
+            case Direction.Up:
+                return gameState.snake.images.head.up;
+            case Direction.Left:
+                return gameState.snake.images.head.left;
+            case Direction.Right:
+                return gameState.snake.images.head.right;
+            case Direction.Down:
+                return gameState.snake.images.head.down;
+        }
     }
+    context.drawImage(getHeadsImageAccordingToDirection(), gameState.snake.occupiedUnits[0].x * gameState.unitSize, gameState.snake.occupiedUnits[0].y * gameState.unitSize, gameState.unitSize, gameState.unitSize);
+    function getBodysImage(unit) {
+        var bodyImages = gameState.snake.images.body;
+        var image;
+        switch (unit.kind) {
+            case Kind.Vertical:
+                image = bodyImages.vertical;
+                break;
+            case Kind.Horizontal:
+                image = bodyImages.horizontal;
+                break;
+            case Kind.TopLeft:
+                image = bodyImages.topLeft;
+                break;
+            case Kind.TopRight:
+                image = bodyImages.topRight;
+                break;
+            case Kind.BottomLeft:
+                image = bodyImages.bottomLeft;
+                break;
+            case Kind.BottomRight:
+                image = bodyImages.bottomRight;
+                break;
+        }
+        return image;
+    }
+    var length = gameState.snake.occupiedUnits.length;
+    for (var i = 1; i < length - 1; i++) {
+        // drawRectangle(
+        //     gameState.snake.occupiedUnits[i].x * gameState.unitSize,
+        //     gameState.snake.occupiedUnits[i].y * gameState.unitSize,
+        //     gameState.unitSize,
+        //     gameState.unitSize,
+        //     gameState.snake.color
+        // );
+        context.drawImage(getBodysImage(gameState.snake.occupiedUnits[i]), gameState.snake.occupiedUnits[i].x * gameState.unitSize, gameState.snake.occupiedUnits[i].y * gameState.unitSize, gameState.unitSize, gameState.unitSize);
+    }
+    function getTailsImage() {
+        var image;
+        var tailUnit = gameState.snake.occupiedUnits[length - 1];
+        switch (tailUnit.direction) {
+            case Direction.Up:
+                image = gameState.snake.images.tail.up;
+                break;
+            case Direction.Left:
+                image = gameState.snake.images.tail.left;
+                break;
+            case Direction.Right:
+                image = gameState.snake.images.tail.right;
+                break;
+            case Direction.Down:
+                image = gameState.snake.images.tail.down;
+                break;
+        }
+        return image;
+    }
+    context.drawImage(getTailsImage(), gameState.snake.occupiedUnits[length - 1].x * gameState.unitSize, gameState.snake.occupiedUnits[length - 1].y * gameState.unitSize, gameState.unitSize, gameState.unitSize);
 }
 function drawApple() {
-    drawRectangle(gameState.apple.position.x * gameState.unitSize, gameState.apple.position.y * gameState.unitSize, gameState.unitSize, gameState.unitSize, gameState.apple.color);
+    // drawRectangle(
+    //     gameState.apple.position.x * gameState.unitSize,
+    //     gameState.apple.position.y * gameState.unitSize,
+    //     gameState.unitSize,
+    //     gameState.unitSize,
+    //     gameState.apple.color
+    // );
+    context.drawImage(gameState.apple.image, gameState.apple.position.x * gameState.unitSize, gameState.apple.position.y * gameState.unitSize, gameState.unitSize, gameState.unitSize);
 }
 function drawJump() {
-    drawRectangle(gameState.jump.position.x * gameState.unitSize, gameState.jump.position.y * gameState.unitSize, gameState.unitSize, gameState.unitSize, gameState.jump.color);
+    // drawRectangle(
+    //     gameState.jump.position.x * gameState.unitSize,
+    //     gameState.jump.position.y * gameState.unitSize,
+    //     gameState.unitSize,
+    //     gameState.unitSize,
+    //     gameState.jump.color
+    // );
+    context.drawImage(getImage('assets/ladder.png'), gameState.jump.position.x * gameState.unitSize, gameState.jump.position.y * gameState.unitSize, gameState.unitSize, gameState.unitSize);
 }
 function drawScissor() {
-    drawRectangle(gameState.scissor.position.x * gameState.unitSize, gameState.scissor.position.y * gameState.unitSize, gameState.unitSize, gameState.unitSize, gameState.scissor.color);
+    // drawRectangle(
+    //     gameState.scissor.position.x * gameState.unitSize,
+    //     gameState.scissor.position.y * gameState.unitSize,
+    //     gameState.unitSize,
+    //     gameState.unitSize,
+    //     gameState.scissor.color
+    // );
+    context.drawImage(getImage('assets/scissor.png'), gameState.scissor.position.x * gameState.unitSize, gameState.scissor.position.y * gameState.unitSize, gameState.unitSize, gameState.unitSize);
 }
 function draw() {
     drawSnake();

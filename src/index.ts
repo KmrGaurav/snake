@@ -100,10 +100,10 @@ const gameState = {
         scissorsAvailable: 0,
         images: {
             head: {
-                Up: getImage('assets/head_up.png'),
-                Left: getImage('assets/head_left.png'),
-                Right: getImage('assets/head_right.png'),
-                Down: getImage('assets/head_down.png'),
+                up: getImage('assets/head_up.png'),
+                left: getImage('assets/head_left.png'),
+                right: getImage('assets/head_right.png'),
+                down: getImage('assets/head_down.png'),
             },
         },
     },
@@ -375,13 +375,13 @@ function drawSnake() {
     function getHeadsImageAccordingToDirection(): any {
         switch (gameState.snake.direction) {
             case Direction.Up:
-                return gameState.snake.images.head.Up;
+                return gameState.snake.images.head.up;
             case Direction.Left:
-                return gameState.snake.images.head.Left;
+                return gameState.snake.images.head.left;
             case Direction.Right:
-                return gameState.snake.images.head.Right;
+                return gameState.snake.images.head.right;
             case Direction.Down:
-                return gameState.snake.images.head.Down;
+                return gameState.snake.images.head.down;
         }
     }
 

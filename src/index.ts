@@ -177,12 +177,11 @@ function setBest() {
 }
 
 function setSnakesJumpCount() {
-    snakesJumpsAvailableElement.textContent = 'Jumps Available: ' + gameState.snake.jumpsAvailable;
+    snakesJumpsAvailableElement.textContent = gameState.snake.jumpsAvailable.toString();
 }
 
 function setSnakesScissorCount() {
-    snakesScissorsAvailableElement.textContent =
-        'Scissors Available: ' + gameState.snake.scissorsAvailable;
+    snakesScissorsAvailableElement.textContent = gameState.snake.scissorsAvailable.toString();
 }
 
 const eventManager = {
@@ -561,22 +560,36 @@ function drawApple() {
 }
 
 function drawJump() {
-    drawRectangle(
+    // drawRectangle(
+    //     gameState.jump.position.x * gameState.unitSize,
+    //     gameState.jump.position.y * gameState.unitSize,
+    //     gameState.unitSize,
+    //     gameState.unitSize,
+    //     gameState.jump.color
+    // );
+    context.drawImage(
+        getImage('assets/ladder.png'),
         gameState.jump.position.x * gameState.unitSize,
         gameState.jump.position.y * gameState.unitSize,
         gameState.unitSize,
-        gameState.unitSize,
-        gameState.jump.color
+        gameState.unitSize
     );
 }
 
 function drawScissor() {
-    drawRectangle(
+    // drawRectangle(
+    //     gameState.scissor.position.x * gameState.unitSize,
+    //     gameState.scissor.position.y * gameState.unitSize,
+    //     gameState.unitSize,
+    //     gameState.unitSize,
+    //     gameState.scissor.color
+    // );
+    context.drawImage(
+        getImage('assets/scissor.png'),
         gameState.scissor.position.x * gameState.unitSize,
         gameState.scissor.position.y * gameState.unitSize,
         gameState.unitSize,
-        gameState.unitSize,
-        gameState.scissor.color
+        gameState.unitSize
     );
 }
 
